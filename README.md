@@ -14,9 +14,15 @@ cmake ..
 make  
 make install  
 
+### Activation
+
+Once the plugin is installed, restart (or start) deadbeef.
+Got to preference, GUI/Misc section and disable standart tray icon (hide system tray icon).  
+Or you can force StatusNotifierItem to be shown in plugin preference.
+
 #### Possible cmake options
 
 -DUSE_GTK - Whether to build gtk2 verion or not. Default: ON  
 -DUSE3_GTK - Whether to build gtk3 verion or not. Default: ON  
 -DCMAKE_INSTALL_PREFIX - Where to install. Default: /usr/local  
--DLIB_INSTALL_DIR - Name of system libdir. Default lib  
+-DLIB_INSTALL_DIR - Name of system libdir. Default: lib  
