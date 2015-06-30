@@ -31,6 +31,7 @@
         "<table><tr><td>Title:</td><td>%s</td></tr>"\
         "<tr><td>Artist:</td><td>%s</td></tr>"\
         "<tr><td>Album:</td><td>%s [%s]</td></tr></table>"
+#define TOOLTIP_MAX_LENGTH 1000
 
 StatusNotifier *icon = NULL;
 
@@ -186,14 +187,14 @@ sni_update_tooltip(void) {
                 gchar *escaped_album  = album  ? g_markup_escape_text (album, -1) : NULL;
                 gchar *escaped_date   = date   ? g_markup_escape_text (date, -1)  : NULL;
 
-                gchar title_body[1000];
+                gchar title_body[TOOLTIP_MAX_LENGTH];
                 date ?
-                    g_sprintf (title_body, _(TOOLTIP_FORMAT), state == OUTPUT_STATE_PAUSED ? _("Playback paused<br>\n") : "",
+                    g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT), state == OUTPUT_STATE_PAUSED ? _("Playback paused<br>\n") : "",
                                escaped_title  ? escaped_title  : ns,
                                escaped_artist ? escaped_artist : ns,
                                escaped_album  ? escaped_album  : ns,
                                escaped_date) :
-                    g_sprintf (title_body, _(TOOLTIP_FORMAT_WO_YEAR), state == OUTPUT_STATE_PAUSED ? _("Playback paused<br>\n") : "",
+                    g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT_WO_YEAR), state == OUTPUT_STATE_PAUSED ? _("Playback paused<br>\n") : "",
                                escaped_title  ? escaped_title  : ns,
                                escaped_artist ? escaped_artist : ns,
                                escaped_album  ? escaped_album  : ns);
