@@ -40,7 +40,7 @@ DB_plugin_action_t *quit_action;
 
 void
 on_activate_requested (void) {
-    if (toggle_mainwindow_action) {
+    if (toggle_mainwindow_action && 0) {
         toggle_mainwindow_action->callback2 (toggle_mainwindow_action, -1);
     }
     else {
@@ -107,6 +107,7 @@ sni_enable (int enable) {
         g_signal_connect (icon, "scroll", (GCallback) on_scroll_requested, NULL);
 
         status_notifier_register (icon);
+        sni_update_status();
     }
     else {
         g_object_unref(icon);
