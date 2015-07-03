@@ -40,7 +40,7 @@ DB_plugin_action_t *quit_action;
 
 void
 on_activate_requested (void) {
-    if (toggle_mainwindow_action && 0) {
+    if (toggle_mainwindow_action) {
         toggle_mainwindow_action->callback2 (toggle_mainwindow_action, -1);
     }
     else {
