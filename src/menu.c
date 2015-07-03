@@ -76,6 +76,7 @@ get_context_menu (void) {
         return menu;
 
     menu = gtk_menu_new ();
+    g_object_ref (menu);
 
     quit_item = create_menu_item (_("Quit"), "application-exit", FALSE, FALSE);
     play_item = create_menu_item (_("Play"), "media-playback-start", FALSE, FALSE);

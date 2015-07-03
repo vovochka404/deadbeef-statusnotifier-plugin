@@ -17,8 +17,8 @@ make install
 ### Activation
 
 Once the plugin is installed, restart (or start) deadbeef.
-Got to preference, GUI/Misc section and disable standart tray icon (hide system tray icon).  
-Or you can force StatusNotifierItem to be shown in plugin preference.
+Go to preference, GUI/Misc section and disable standart tray icon (hide system tray icon).  
+Or you can force StatusNotifierItem to be shown in plugin settings.
 
 #### Possible cmake options
 
