@@ -60,5 +60,9 @@ GtkWidget *get_context_menu_item (SNIContextMenuItem item);
 
 void deadbeef_toggle_play_pause (void);
 
+gboolean deadbeef_preferences_available (void);
+
+void deadbeef_preferences_activate (void);
+
 
 #endif

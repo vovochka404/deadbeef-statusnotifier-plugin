@@ -29,6 +29,7 @@ GtkWidget *play_item;
 GtkWidget *stop_item;
 GtkWidget *next_item;
 GtkWidget *prev_item;
+GtkWidget *pref_item;
 GtkWidget *random_item;
 
 GtkWidget*
@@ -70,6 +71,12 @@ on_random_activate(GtkMenuItem *menuitem,
     deadbeef->sendmessage(DB_EV_PLAY_RANDOM, 0, 0, 0);
 }
 
+void
+on_pref_activate(GtkMenuItem *menuitem,
+               gpointer     user_data) {
+    deadbeef_preferences_activate();
+}
+
 GtkWidget *
 get_context_menu (void) {
     if (menu)
@@ -98,6 +105,12 @@ get_context_menu (void) {
     gtk_container_add (GTK_CONTAINER (menu), next_item);
     gtk_container_add (GTK_CONTAINER (menu), random_item);
     gtk_container_add (GTK_CONTAINER (menu), create_menu_item (NULL, NULL, FALSE, TRUE));
+
+    if (deadbeef_preferences_available()) {
+        pref_item = create_menu_item(_("Preferences"), "configure", FALSE, FALSE);
+        g_signal_connect(pref_item, "activate", G_CALLBACK(on_pref_activate), NULL);
+        gtk_container_add (GTK_CONTAINER (menu), pref_item);
+    }
     gtk_container_add (GTK_CONTAINER (menu), quit_item);
 
     return menu;

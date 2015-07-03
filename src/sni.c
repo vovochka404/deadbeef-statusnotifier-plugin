@@ -35,8 +35,10 @@
 
 StatusNotifier *icon = NULL;
 
-DB_plugin_action_t *toggle_mainwindow_action;
-DB_plugin_action_t *quit_action;
+DB_plugin_action_t *toggle_mainwindow_action = NULL;
+DB_plugin_action_t *preferences_action = NULL;
+
+void sni_update_status ();
 
 void
 on_activate_requested (void) {
@@ -107,7 +109,7 @@ sni_enable (int enable) {
         g_signal_connect (icon, "scroll", (GCallback) on_scroll_requested, NULL);
 
         status_notifier_register (icon);
-        sni_update_status();
+        sni_update_status ();
     }
     else {
         g_object_unref(icon);
@@ -294,6 +296,16 @@ deadbeef_toggle_play_pause (void) {
     deadbeef->sendmessage (DB_EV_PLAY_CURRENT, 0, 0, 0);
 }
 
+gboolean
+deadbeef_preferences_available (void) {
+    return preferences_action != NULL;
+}
+
+void
+deadbeef_preferences_activate (void) {
+    preferences_action->callback2 (preferences_action, 0);
+}
+
 void
 sni_configchanged (void) {
     int enabled = deadbeef->conf_get_int ("sni.enabled", 1);
@@ -334,7 +346,9 @@ sni_connect() {
     while (actions) {
         if (g_strcmp0(actions->name, "toggle_player_window") == 0) {
             toggle_mainwindow_action = actions;
-            break;
+        }
+        else if (g_strcmp0(actions->name, "preferences") == 0) {
+            preferences_action = actions;
         }
         actions = actions->next;
     }
