@@ -21,6 +21,7 @@
  */
 
 #include "sni.h"
+#include "x11-force-focus.h"
 
 
 #define TOOLTIP_FORMAT_WO_YEAR "%s"\
@@ -42,13 +43,14 @@ void sni_update_status ();
 
 void
 on_activate_requested (void) {
-    if (toggle_mainwindow_action) {
+    if (toggle_mainwindow_action && 0) {
         toggle_mainwindow_action->callback2 (toggle_mainwindow_action, -1);
     }
     else {
         GtkWidget *mainwin = gtkui_plugin->get_mainwin ();
+        GdkWindow *gdk_window = gtk_widget_get_window (mainwin);
 
-        int iconified = gdk_window_get_state (gtk_widget_get_window(mainwin)) & GDK_WINDOW_STATE_ICONIFIED;
+        int iconified = gdk_window_get_state (gdk_window) & GDK_WINDOW_STATE_ICONIFIED;
         if (gtk_widget_get_visible (mainwin) && !iconified) {
             gtk_widget_hide (mainwin);
         }
@@ -59,6 +61,7 @@ on_activate_requested (void) {
             else {
                 gtk_window_present (GTK_WINDOW (mainwin));
             }
+            gdk_x11_window_force_focus (gdk_window, 0);
         }
     }
 }
@@ -170,8 +173,8 @@ sni_update_tooltip(void) {
             {
                 DB_playItem_t *track = deadbeef->streamer_get_playing_track();
                 static gchar *ns = NULL;
-				if (!ns)
-					ns = _("not specified");
+                if (!ns)
+                    ns = _("not specified");
 
                 int64_t duration = (int64_t)deadbeef->pl_get_item_duration (track) * 1000000;
                 const char *album = deadbeef->pl_find_meta (track, "album");
