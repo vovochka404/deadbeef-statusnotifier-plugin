@@ -25,13 +25,13 @@
 
 
 #define TOOLTIP_FORMAT_WO_YEAR "%s"\
-        "<table><tr><td>Title:</td><td>%s</td></tr>"\
-        "<tr><td>Artist:</td><td>%s</td></tr>"\
-        "<tr><td>Album:</td><td>%s</td></tr></table>"
+        "<table><tr><td><b>Title:</b></td><td>%s</td></tr>"\
+        "<tr><td><b>Artist:</b></td><td>%s</td></tr>"\
+        "<tr><td><b>Album:</b></td><td>%s</td></tr></table>"
 #define TOOLTIP_FORMAT "%s"\
-        "<table><tr><td>Title:</td><td>%s</td></tr>"\
-        "<tr><td>Artist:</td><td>%s</td></tr>"\
-        "<tr><td>Album:</td><td>%s [%s]</td></tr></table>"
+        "<table><tr><td><b>Title:</td><td>%s</td></tr>"\
+        "<tr><td><b>Artist:</b></td><td>%s</td></tr>"\
+        "<tr><td><b>Album:</b></td><td>%s [%s]</td></tr></table>"
 #define TOOLTIP_MAX_LENGTH 1000
 
 StatusNotifier *icon = NULL;
@@ -323,6 +323,7 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     case DB_EV_CONFIGCHANGED:
 
         sni_configchanged ();
+        update_playback_controls();
         break;
     case DB_EV_PAUSED:
     case DB_EV_TOGGLE_PAUSE:

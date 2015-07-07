@@ -32,8 +32,20 @@ GtkWidget *prev_item;
 GtkWidget *pref_item;
 GtkWidget *random_item;
 
+GtkWidget *pb_menu;
+GtkWidget *pb_order_linear;
+GtkWidget *pb_order_shuffle_tracks;
+GtkWidget *pb_order_random;
+GtkWidget *pb_order_shuffle_albums;
+GtkWidget *pb_loop_all;
+GtkWidget *pb_loop_none;
+GtkWidget *pb_loop_single;
+
+GSList *pb_order;
+GSList *pb_loop;
+
 GtkWidget*
-create_menu_item (gchar *label, gchar *icon_name, gboolean is_checkbox, gboolean is_separator);
+create_menu_item (gchar *label, gchar *icon_name, int is_checkbox, gboolean is_separator);
 
 void
 on_quit_activate(GtkMenuItem *menuitem,
@@ -77,37 +89,135 @@ on_pref_activate(GtkMenuItem *menuitem,
     deadbeef_preferences_activate();
 }
 
+void
+on_playback_order_activate(GtkMenuItem *menuitem) {
+    guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (menuitem), "pb_data"));
+    deadbeef->conf_set_int ("playback.order", val);
+    deadbeef->sendmessage (DB_EV_CONFIGCHANGED, 0, 0, 0);
+}
+
+void
+on_playback_loop_activate(GtkMenuItem *menuitem) {
+    guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (menuitem), "pb_data"));
+    deadbeef->conf_set_int ("playback.loop", val);
+    deadbeef->sendmessage (DB_EV_CONFIGCHANGED, 0, 0, 0);
+}
+
+void
+update_playback_controls() {
+    guint32 order = deadbeef-> conf_get_int("playback.order", 0);
+    guint32 loop  = deadbeef-> conf_get_int("playback.loop", 0);
+
+    void check_list(gpointer item, gpointer data) {
+        guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (item), "pb_data"));
+        if (val == GPOINTER_TO_UINT (data)) {
+            gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), TRUE);
+        }
+    }
+
+    g_slist_foreach(pb_order, check_list, GUINT_TO_POINTER(order));
+    g_slist_foreach(pb_loop, check_list, GUINT_TO_POINTER(loop));
+}
+
 GtkWidget *
 get_context_menu (void) {
     if (menu)
         return menu;
 
     menu = gtk_menu_new ();
+    pb_menu = gtk_menu_new ();
     g_object_ref (menu);
 
-    quit_item = create_menu_item (_("Quit"), "application-exit", FALSE, FALSE);
-    play_item = create_menu_item (_("Play"), "media-playback-start", FALSE, FALSE);
-    stop_item = create_menu_item (_("Stop"), "media-playback-stop", FALSE, FALSE);
-    prev_item = create_menu_item (_("Previous"), "media-skip-backward", FALSE, FALSE);
-    next_item = create_menu_item (_("Next"), "media-skip-forward", FALSE, FALSE);
-    random_item = create_menu_item (_("Play Random"), "", FALSE, FALSE);
+    /** Common media controls **/
 
-    g_signal_connect(quit_item, "activate", G_CALLBACK (on_quit_activate), NULL);
-    g_signal_connect(play_item, "activate", G_CALLBACK (on_play_activate), NULL);
-    g_signal_connect(stop_item, "activate", G_CALLBACK (on_stop_activate), NULL);
-    g_signal_connect(prev_item, "activate", G_CALLBACK (on_prev_activate), NULL);
-    g_signal_connect(next_item, "activate", G_CALLBACK (on_next_activate), NULL);
-    g_signal_connect(random_item, "activate", G_CALLBACK (on_random_activate), NULL);
+    quit_item = create_menu_item (_("Quit"), "application-exit", 0, FALSE);
+    play_item = create_menu_item (_("Play"), "media-playback-start", 0, FALSE);
+    stop_item = create_menu_item (_("Stop"), "media-playback-stop", 0, FALSE);
+    prev_item = create_menu_item (_("Previous"), "media-skip-backward", 0, FALSE);
+    next_item = create_menu_item (_("Next"), "media-skip-forward", 0, FALSE);
+    random_item = create_menu_item (_("Play Random"), NULL, 0, FALSE);
+
+    g_signal_connect (quit_item, "activate", G_CALLBACK (on_quit_activate), NULL);
+    g_signal_connect (play_item, "activate", G_CALLBACK (on_play_activate), NULL);
+    g_signal_connect (stop_item, "activate", G_CALLBACK (on_stop_activate), NULL);
+    g_signal_connect (prev_item, "activate", G_CALLBACK (on_prev_activate), NULL);
+    g_signal_connect (next_item, "activate", G_CALLBACK (on_next_activate), NULL);
+    g_signal_connect (random_item, "activate", G_CALLBACK (on_random_activate), NULL);
 
     gtk_container_add (GTK_CONTAINER (menu), play_item);
     gtk_container_add (GTK_CONTAINER (menu), stop_item);
     gtk_container_add (GTK_CONTAINER (menu), prev_item);
     gtk_container_add (GTK_CONTAINER (menu), next_item);
     gtk_container_add (GTK_CONTAINER (menu), random_item);
-    gtk_container_add (GTK_CONTAINER (menu), create_menu_item (NULL, NULL, FALSE, TRUE));
+    gtk_container_add (GTK_CONTAINER (menu), create_menu_item (NULL, NULL, 0, TRUE));
+
+    /** Playback settings controls **/
+    /** Playback order **/
+
+    pb_order_linear         = create_menu_item (_("Linear"), NULL, 2, FALSE);
+    gtk_radio_menu_item_set_group (GTK_RADIO_MENU_ITEM (pb_order_linear), pb_order);
+    pb_order = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (pb_order_linear));
+    g_object_set_data (G_OBJECT (pb_order_linear), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_LINEAR));
+
+    pb_order_shuffle_tracks = create_menu_item (_("Shuffle tracks"), NULL, 2, FALSE);
+    gtk_radio_menu_item_set_group (GTK_RADIO_MENU_ITEM(pb_order_shuffle_tracks), pb_order);
+    pb_order = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM(pb_order_shuffle_tracks));
+    g_object_set_data (G_OBJECT (pb_order_shuffle_tracks), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_SHUFFLE_TRACKS));
+
+    pb_order_shuffle_albums = create_menu_item (_("Shuffle albums"), NULL, 2, FALSE);
+    gtk_radio_menu_item_set_group (GTK_RADIO_MENU_ITEM(pb_order_shuffle_albums), pb_order);
+    pb_order = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM(pb_order_shuffle_albums));
+    g_object_set_data (G_OBJECT (pb_order_shuffle_albums), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_SHUFFLE_ALBUMS));
+
+    pb_order_random         = create_menu_item (_("Random"), NULL, 2, FALSE);
+    gtk_radio_menu_item_set_group (GTK_RADIO_MENU_ITEM(pb_order_random), pb_order);
+    pb_order = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM(pb_order_random));
+    g_object_set_data (G_OBJECT (pb_order_random), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_RANDOM));
+
+    /** Playback loop **/
+
+    pb_loop_all         = create_menu_item (_("Loop all"), NULL, 2, FALSE);
+    gtk_radio_menu_item_set_group (GTK_RADIO_MENU_ITEM (pb_loop_all), pb_loop);
+    pb_loop = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (pb_loop_all));
+    g_object_set_data (G_OBJECT (pb_loop_all), "pb_data", GUINT_TO_POINTER (PLAYBACK_MODE_LOOP_ALL));
+
+    pb_loop_single      = create_menu_item (_("Loop single song"), NULL, 2, FALSE);
+    gtk_radio_menu_item_set_group (GTK_RADIO_MENU_ITEM (pb_loop_single), pb_loop);
+    pb_loop = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (pb_loop_single));
+    g_object_set_data (G_OBJECT (pb_loop_single), "pb_data", GUINT_TO_POINTER (PLAYBACK_MODE_LOOP_SINGLE));
+
+    pb_loop_none        = create_menu_item (_("Don't loop"), NULL, 2, FALSE);
+    gtk_radio_menu_item_set_group (GTK_RADIO_MENU_ITEM (pb_loop_none), pb_loop);
+    pb_loop = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (pb_loop_none));
+    g_object_set_data (G_OBJECT (pb_loop_none), "pb_data", GUINT_TO_POINTER (PLAYBACK_MODE_NOLOOP));
+
+    update_playback_controls();
+
+    g_signal_connect (pb_order_linear, "activate", G_CALLBACK (on_playback_order_activate), NULL);
+    g_signal_connect (pb_order_shuffle_tracks, "activate", G_CALLBACK (on_playback_order_activate), NULL);
+    g_signal_connect (pb_order_shuffle_albums, "activate", G_CALLBACK (on_playback_order_activate), NULL);
+    g_signal_connect (pb_order_random, "activate", G_CALLBACK (on_playback_order_activate), NULL);
+    g_signal_connect (pb_loop_all, "activate", G_CALLBACK (on_playback_loop_activate), NULL);
+    g_signal_connect (pb_loop_single, "activate", G_CALLBACK (on_playback_loop_activate), NULL);
+    g_signal_connect (pb_loop_none, "activate", G_CALLBACK (on_playback_loop_activate), NULL);
+
+    gtk_container_add (GTK_CONTAINER (pb_menu), pb_order_linear);
+    gtk_container_add (GTK_CONTAINER (pb_menu), pb_order_shuffle_tracks);
+    gtk_container_add (GTK_CONTAINER (pb_menu), pb_order_shuffle_albums);
+    gtk_container_add (GTK_CONTAINER (pb_menu), pb_order_random);
+    gtk_container_add (GTK_CONTAINER (pb_menu), create_menu_item (NULL, NULL, 0, TRUE));
+    gtk_container_add (GTK_CONTAINER (pb_menu), pb_loop_all);
+    gtk_container_add (GTK_CONTAINER (pb_menu), pb_loop_single);
+    gtk_container_add (GTK_CONTAINER (pb_menu), pb_loop_none);
+
+    GtkWidget *playback_item = create_menu_item (_("Playback"), NULL, 0, FALSE);
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM(playback_item), pb_menu);
+
+    gtk_container_add (GTK_CONTAINER (menu), playback_item);
+    gtk_container_add (GTK_CONTAINER (menu), create_menu_item (NULL, NULL, 0, TRUE));
 
     if (deadbeef_preferences_available()) {
-        pref_item = create_menu_item(_("Preferences"), "configure", FALSE, FALSE);
+        pref_item = create_menu_item(_("Preferences"), "configure", 0, FALSE);
         g_signal_connect(pref_item, "activate", G_CALLBACK(on_pref_activate), NULL);
         gtk_container_add (GTK_CONTAINER (menu), pref_item);
     }
@@ -117,7 +227,7 @@ get_context_menu (void) {
 }
 
 GtkWidget*
-create_menu_item (gchar *label, gchar *icon_name, gboolean is_checkbox, gboolean is_separator) {
+create_menu_item (gchar *label, gchar *icon_name, int is_checkbox, gboolean is_separator) {
     GtkWidget *item;
     GtkWidget *icon;
 
@@ -127,7 +237,9 @@ create_menu_item (gchar *label, gchar *icon_name, gboolean is_checkbox, gboolean
         return item;
     }
 
-    if (is_checkbox)
+    if (is_checkbox && is_checkbox == 2)
+        item = gtk_radio_menu_item_new_with_mnemonic (NULL, label);
+    else if (is_checkbox)
         item = gtk_check_menu_item_new_with_mnemonic (label);
     else if(icon_name)
         item = gtk_image_menu_item_new_with_mnemonic (label);
