@@ -48,49 +48,42 @@ GtkWidget*
 create_menu_item (gchar *label, gchar *icon_name, int is_checkbox, gboolean is_separator);
 
 void
-on_quit_activate(GtkMenuItem *menuitem,
-               gpointer     user_data) {
-    deadbeef->sendmessage(DB_EV_TERMINATE, 0, 0, 0);
+on_quit_activate (GtkMenuItem *menuitem) {
+    deadbeef->sendmessage (DB_EV_TERMINATE, 0, 0, 0);
 }
 
 void
-on_play_activate(GtkMenuItem *menuitem,
-               gpointer     user_data) {
-    deadbeef_toggle_play_pause();
+on_play_activate (GtkMenuItem *menuitem) {
+    deadbeef_toggle_play_pause ();
 }
 
 void
-on_stop_activate(GtkMenuItem *menuitem,
-               gpointer     user_data) {
-    deadbeef->sendmessage(DB_EV_STOP, 0, 0, 0);
+on_stop_activate (GtkMenuItem *menuitem) {
+    deadbeef->sendmessage (DB_EV_STOP, 0, 0, 0);
 }
 
 void
-on_next_activate(GtkMenuItem *menuitem,
-               gpointer     user_data) {
-    deadbeef->sendmessage(DB_EV_NEXT, 0, 0, 0);
+on_next_activate (GtkMenuItem *menuitem) {
+    deadbeef->sendmessage (DB_EV_NEXT, 0, 0, 0);
 }
 
 void
-on_prev_activate(GtkMenuItem *menuitem,
-               gpointer     user_data) {
-    deadbeef->sendmessage(DB_EV_PREV, 0, 0, 0);
+on_prev_activate (GtkMenuItem *menuitem) {
+    deadbeef->sendmessage (DB_EV_PREV, 0, 0, 0);
 }
 
 void
-on_random_activate(GtkMenuItem *menuitem,
-               gpointer     user_data) {
-    deadbeef->sendmessage(DB_EV_PLAY_RANDOM, 0, 0, 0);
+on_random_activate (GtkMenuItem *menuitem) {
+    deadbeef->sendmessage (DB_EV_PLAY_RANDOM, 0, 0, 0);
 }
 
 void
-on_pref_activate(GtkMenuItem *menuitem,
-               gpointer     user_data) {
-    deadbeef_preferences_activate();
+on_pref_activate (GtkMenuItem *menuitem) {
+    deadbeef_preferences_activate ();
 }
 
 void
-on_playback_order_activate(GtkMenuItem *menuitem) {
+on_playback_order_activate (GtkMenuItem *menuitem) {
     guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (menuitem), "pb_data"));
     deadbeef->conf_set_int ("playback.order", val);
     deadbeef->sendmessage (DB_EV_CONFIGCHANGED, 0, 0, 0);
@@ -104,19 +97,19 @@ on_playback_loop_activate(GtkMenuItem *menuitem) {
 }
 
 void
-update_playback_controls() {
-    guint32 order = deadbeef-> conf_get_int("playback.order", 0);
-    guint32 loop  = deadbeef-> conf_get_int("playback.loop", 0);
+update_playback_controls (void) {
+    guint32 order = deadbeef->conf_get_int ("playback.order", 0);
+    guint32 loop  = deadbeef->conf_get_int ("playback.loop", 0);
 
-    void check_list(gpointer item, gpointer data) {
+    void check_list (gpointer item, gpointer data) {
         guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (item), "pb_data"));
         if (val == GPOINTER_TO_UINT (data)) {
             gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), TRUE);
         }
     }
 
-    g_slist_foreach(pb_order, check_list, GUINT_TO_POINTER(order));
-    g_slist_foreach(pb_loop, check_list, GUINT_TO_POINTER(loop));
+    g_slist_foreach (pb_order, check_list, GUINT_TO_POINTER(order));
+    g_slist_foreach (pb_loop, check_list, GUINT_TO_POINTER(loop));
 }
 
 GtkWidget *
@@ -191,7 +184,7 @@ get_context_menu (void) {
     pb_loop = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (pb_loop_none));
     g_object_set_data (G_OBJECT (pb_loop_none), "pb_data", GUINT_TO_POINTER (PLAYBACK_MODE_NOLOOP));
 
-    update_playback_controls();
+    update_playback_controls ();
 
     g_signal_connect (pb_order_linear, "activate", G_CALLBACK (on_playback_order_activate), NULL);
     g_signal_connect (pb_order_shuffle_tracks, "activate", G_CALLBACK (on_playback_order_activate), NULL);
