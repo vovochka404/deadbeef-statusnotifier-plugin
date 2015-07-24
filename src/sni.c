@@ -154,7 +154,7 @@ sni_toggle_play_pause(int play) {
 void _sni_update_tooltip(void *user_date);
 
 void
-sni_update_tooltip(void) {
+sni_update_tooltip(int state) {
     if (!icon)
         return;
 
@@ -162,7 +162,8 @@ sni_update_tooltip(void) {
     output = deadbeef->get_output ();
 
     if (output) {
-        int state = output->state ();
+        if (state < 0)
+            state = output->state ();
 
         switch (state) {
             case OUTPUT_STATE_STOPPED:
@@ -176,7 +177,12 @@ sni_update_tooltip(void) {
                 if (!ns)
                     ns = _("not specified");
 
-                int64_t duration = (int64_t)deadbeef->pl_get_item_duration (track) * 1000000;
+                if (!track) {
+                    status_notifier_set_tooltip (icon, "deadbeef", "DeaDBeeF", _("Playing"));
+                    break;
+                }
+
+                int64_t duration  = (int64_t)deadbeef->pl_get_item_duration (track) * 1000000;
                 const char *album = deadbeef->pl_find_meta (track, "album");
                 const char *albumArtist = deadbeef->pl_find_meta (track, "albumartist");
                 if (albumArtist == NULL)
@@ -235,11 +241,11 @@ sni_update_tooltip(void) {
 }
 
 void _sni_update_tooltip (void *user_date) {
-    sni_update_tooltip ();
+    sni_update_tooltip (-1);
 }
 
 void
-sni_update_status (void) {
+sni_update_status (int state) {
     DB_output_t *output;
     GtkWidget *stop_item;
 
@@ -249,7 +255,9 @@ sni_update_status (void) {
     output = deadbeef->get_output ();
 
     if (output) {
-        switch (output->state ()) {
+        if (state < 0)
+            state = output->state ();
+        switch (state) {
             case OUTPUT_STATE_PLAYING:
                 status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-start");
 
@@ -273,7 +281,7 @@ sni_update_status (void) {
                 break;
         }
     }
-    sni_update_tooltip ();
+    sni_update_tooltip (state);
 }
 
 
@@ -321,18 +329,24 @@ static int
 sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     switch (id) {
     case DB_EV_CONFIGCHANGED:
-
         sni_configchanged ();
-        update_playback_controls();
+        update_playback_controls ();
         break;
-    case DB_EV_PAUSED:
-    case DB_EV_TOGGLE_PAUSE:
-    case DB_EV_SONGCHANGED:
-    case DB_EV_SONGSTARTED:
-    case DB_EV_SONGFINISHED:
-    case DB_EV_TRACKINFOCHANGED:
 
-        sni_update_status ();
+    case DB_EV_TRACKINFOCHANGED:
+        sni_update_tooltip (-1);
+        break;
+
+    case DB_EV_PAUSED:
+        sni_update_status (-1);
+        break;
+
+    case DB_EV_STOP:
+        sni_update_status (OUTPUT_STATE_STOPPED);
+        break;
+
+    case DB_EV_SONGSTARTED:
+        sni_update_status (OUTPUT_STATE_PLAYING);
         break;
     }
     return 0;
