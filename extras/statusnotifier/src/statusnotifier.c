@@ -31,12 +31,6 @@
 #include "interfaces.h"
 #include "closures.h"
 
-#ifdef USE_DBUSMENU
-#include <libdbusmenu-glib/menuitem.h>
-#include <libdbusmenu-glib/server.h>
-#include <libdbusmenu-gtk/parser.h>
-#endif
-
 /**
  * SECTION:statusnotifier
  * @Short_description: A StatusNotifierItem as per KDE's specifications
@@ -160,7 +154,7 @@ struct _StatusNotifierPrivate
     GDBusProxy *dbus_proxy;
 #ifdef USE_DBUSMENU
     DbusmenuServer *menuservice;
-    GtkWidget  *menu;
+    DbusmenuMenuitem  *menu;
 #endif
     gboolean is_menu;
     GDBusConnection *dbus_conn;
@@ -469,7 +463,7 @@ status_notifier_class_init (StatusNotifierClass *klass)
     status_notifier_props[PROP_MENU] =
         g_param_spec_object ("menu", "menu",
                 "Context menu to be exposed via dbus",
-                GTK_TYPE_WIDGET,
+                DBUSMENU_TYPE_MENUITEM,
                 G_PARAM_READWRITE);
 #endif
 
@@ -2036,7 +2030,7 @@ status_notifier_get_state (StatusNotifier          *sn)
 /**
  * status_notifier_set_context_menu:
  * @sn: A #StatusNotifier
- * @menu: (allow-none): A #GtkWidget of the menu to set as context menu or %NULL
+ * @menu: (allow-none): A #DbusmenuMenuitem of the menu to set as context menu or %NULL
  *
  * Exports specified context menu via dbus.
  * If @menu is set, g_object_ref_sink() will be used to take ownership.
@@ -2049,13 +2043,12 @@ status_notifier_get_state (StatusNotifier          *sn)
  */
 void
 status_notifier_set_context_menu (StatusNotifier          *sn,
-                                  GtkWidget               *menu)
+                                  DbusmenuMenuitem        *menu)
 {
     StatusNotifierPrivate *priv;
-    DbusmenuMenuitem *root = NULL;
 
     g_return_if_fail (IS_STATUS_NOTIFIER (sn));
-    g_return_if_fail (!menu || GTK_IS_MENU (menu));
+    g_return_if_fail (!menu || DBUSMENU_IS_MENUITEM (menu));
     priv = sn->priv;
 
     if (priv->menu)
@@ -2067,16 +2060,10 @@ status_notifier_set_context_menu (StatusNotifier          *sn,
     {
         g_object_ref_sink (priv->menu);
 
-        root = dbusmenu_gtk_parse_menu_structure (priv->menu);
-
         if (priv->menuservice == NULL)
             priv->menuservice = dbusmenu_server_new ("/MenuBar");
 
-        dbusmenu_server_set_root (priv->menuservice, root);
-
-        /* Drop our local ref as set_root should get it's own. */
-        if (root != NULL)
-            g_object_unref (root);
+        dbusmenu_server_set_root (priv->menuservice, priv->menu);
     }
     else if (priv->menuservice)
     {
@@ -2089,13 +2076,13 @@ status_notifier_set_context_menu (StatusNotifier          *sn,
  * status_notifier_get_context_menu:
  * @sn: A #StatusNotifier
  *
- * Returns the #GtkWidget set as context menu, or %NULL
+ * Returns the #DbusmenuMenuitem set as context menu, or %NULL
  *
  * Only available if dbusmenu support was enabled in compile-time.
  *
- * Returns: (transfer none): #GtkWidget or %NULL (if menu was not setuped)
+ * Returns: (transfer none): #DbusmenuMenuitem or %NULL (if menu was not setuped)
  */
-GtkWidget *
+DbusmenuMenuitem *
 status_notifier_get_context_menu (StatusNotifier          *sn)
 {
     StatusNotifierPrivate *priv;

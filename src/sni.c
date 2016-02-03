@@ -56,7 +56,7 @@ on_activate_requested (void) {
         }
         else {
             if (iconified) {
-                gtk_window_deiconify (GTK_WINDOW(mainwin));
+                gtk_window_deiconify (GTK_WINDOW (mainwin));
             }
             else {
                 gtk_window_present (GTK_WINDOW (mainwin));
@@ -68,7 +68,7 @@ on_activate_requested (void) {
 
 void
 on_sec_activate_requested (void) {
-    deadbeef_toggle_play_pause();
+    deadbeef_toggle_play_pause ();
 }
 
 void
@@ -105,7 +105,7 @@ sni_enable (int enable) {
         icon = status_notifier_new_from_icon_name ("deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS, "deadbeef");
         status_notifier_set_status (icon, STATUS_NOTIFIER_STATUS_ACTIVE);
         status_notifier_set_title (icon, "DeaDBeeF");
-        status_notifier_set_context_menu (icon, get_context_menu());
+        status_notifier_set_context_menu (icon, get_context_menu ());
 
         g_signal_connect (icon, "activate", (GCallback) on_activate_requested, NULL);
         g_signal_connect (icon, "secondary-activate", (GCallback) on_sec_activate_requested, NULL);
@@ -115,46 +115,40 @@ sni_enable (int enable) {
         sni_update_status ();
     }
     else {
-        g_object_unref(icon);
+        g_object_unref (icon);
         icon = NULL;
     }
 }
 
 
 void
-sni_toggle_play_pause(int play) {
+sni_toggle_play_pause (int play) {
     static int play_pause_state = 1;
-    GtkWidget *play_item;
-    GtkWidget *icon;
+    DbusmenuMenuitem *play_item;
 
     if ((play_pause_state && play) || (!play_pause_state && !play))
         return;
 
     play_item = get_context_menu_item (SNI_MENU_ITEM_PLAY);
-    icon = gtk_image_menu_item_get_image (GTK_IMAGE_MENU_ITEM (play_item));
 
     if (play_pause_state && !play) {
-        gtk_menu_item_set_label (GTK_MENU_ITEM(play_item), _("Pause"));
-
-        if (icon)
-            gtk_image_set_from_icon_name (GTK_IMAGE (icon), "media-playback-pause", GTK_ICON_SIZE_MENU);
+        dbusmenu_menuitem_property_set (play_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Pause"));
+        dbusmenu_menuitem_property_set (play_item, DBUSMENU_MENUITEM_PROP_ICON_NAME, "media-playback-pause");
 
         play_pause_state = 0;
     }
     else {
-        gtk_menu_item_set_label (GTK_MENU_ITEM (play_item), _("Play"));
-
-        if (icon)
-            gtk_image_set_from_icon_name (GTK_IMAGE (icon), "media-playback-start", GTK_ICON_SIZE_MENU);
+        dbusmenu_menuitem_property_set (play_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Play"));
+        dbusmenu_menuitem_property_set (play_item, DBUSMENU_MENUITEM_PROP_ICON_NAME, "media-playback-start");
 
         play_pause_state = 1;
     }
 }
 
-void _sni_update_tooltip(void *user_date);
+void _sni_update_tooltip (void *user_date);
 
 void
-sni_update_tooltip(int state) {
+sni_update_tooltip (int state) {
     if (!icon)
         return;
 
@@ -172,7 +166,7 @@ sni_update_tooltip(int state) {
             case OUTPUT_STATE_PAUSED:
             case OUTPUT_STATE_PLAYING:
             {
-                DB_playItem_t *track = deadbeef->streamer_get_playing_track();
+                DB_playItem_t *track = deadbeef->streamer_get_playing_track ();
                 static gchar *ns = NULL;
                 if (!ns)
                     ns = _("not specified");
@@ -211,10 +205,10 @@ sni_update_tooltip(int state) {
                                escaped_artist ? escaped_artist : ns,
                                escaped_album  ? escaped_album  : ns);
 
-                g_free(escaped_title);
-                g_free(escaped_artist);
-                g_free(escaped_album);
-                g_free(escaped_date);
+                g_free (escaped_title);
+                g_free (escaped_artist);
+                g_free (escaped_album);
+                g_free (escaped_date);
 
                 GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, _sni_update_tooltip, NULL);
                 if (!buf) {
@@ -247,7 +241,7 @@ void _sni_update_tooltip (void *user_date) {
 void
 sni_update_status (int state) {
     DB_output_t *output;
-    GtkWidget *stop_item;
+    DbusmenuMenuitem *stop_item;
 
     if (!icon)
         return;
@@ -262,7 +256,7 @@ sni_update_status (int state) {
                 status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-start");
 
                 stop_item = get_context_menu_item (SNI_MENU_ITEM_STOP);
-                gtk_widget_set_sensitive (stop_item, TRUE);
+                dbusmenu_menuitem_property_set_bool (stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 
                 sni_toggle_play_pause (0);
                 break;
@@ -275,7 +269,7 @@ sni_update_status (int state) {
                 status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, NULL);
 
                 stop_item = get_context_menu_item (SNI_MENU_ITEM_STOP);
-                gtk_widget_set_sensitive (stop_item, FALSE);
+                dbusmenu_menuitem_property_set_bool (stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
 
                 sni_toggle_play_pause (1);
                 break;
@@ -353,19 +347,19 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
 }
 
 int
-sni_connect() {
+sni_connect () {
     gtkui_plugin = (ddb_gtkui_t *)deadbeef->plug_get_for_id (DDB_GTKUI_PLUGIN_ID);
     if (!gtkui_plugin) {
         fprintf (stderr, "sni: can't find gtkui plugin\n");
         return -1;
     }
 
-    DB_plugin_action_t *actions = gtkui_plugin->gui.plugin.get_actions(NULL);
+    DB_plugin_action_t *actions = gtkui_plugin->gui.plugin.get_actions (NULL);
     while (actions) {
-        if (g_strcmp0(actions->name, "toggle_player_window") == 0) {
+        if (g_strcmp0 (actions->name, "toggle_player_window") == 0) {
             toggle_mainwindow_action = actions;
         }
-        else if (g_strcmp0(actions->name, "preferences") == 0) {
+        else if (g_strcmp0 (actions->name, "preferences") == 0) {
             preferences_action = actions;
         }
         actions = actions->next;
@@ -391,8 +385,8 @@ static DB_misc_t plugin = {
     .plugin.api_vmajor = 1,
     .plugin.api_vminor = 5,
     .plugin.version_major = 1,
-    .plugin.version_minor = 0,
-#if GTK_CHECK_VERSION(3,0,0)
+    .plugin.version_minor = 1,
+#if GTK_CHECK_VERSION (3, 0, 0)
     .plugin.id = "sni_gtk3",
     .plugin.name = "StatusNotifierItem for GTK3 UI",
 #else
@@ -417,18 +411,18 @@ static DB_misc_t plugin = {
 
         "You should have received a copy of the GNU General Public License\n"
         "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n",
-    .plugin.website = "http://example.com",
+    .plugin.website = "https://github.com/vovochka404/deadbeef-statusnotifier-plugin",
     .plugin.configdialog = settings_dlg,
     .plugin.message = sni_message,
     .plugin.connect = sni_connect,
 };
 
 DB_plugin_t *
-#if GTK_CHECK_VERSION(3,0,0)
+#if GTK_CHECK_VERSION (3 ,0, 0)
 sni_gtk3_load (DB_functions_t *api) {
 #else
 sni_gtk2_load (DB_functions_t *api) {
 #endif
     deadbeef = api;
-    return DB_PLUGIN(&plugin);
+    return DB_PLUGIN (&plugin);
 }

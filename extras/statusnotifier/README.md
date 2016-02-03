@@ -38,6 +38,7 @@ Simple as that.
 ## Free Software
 
 statusnotifier - Copyright (C) 2014 Olivier Brunel <jjk@jjacky.com>
+dbusmenu support - 2015 Perepechin Vladimir <vovochka13@gmail.com>
 
 statusnotifier is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

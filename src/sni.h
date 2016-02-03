@@ -36,6 +36,7 @@
 #endif
 
 #include <gtk/gtk.h>
+#include <libdbusmenu-glib/menuitem.h>
 
 #include <deadbeef/deadbeef.h>
 #include <deadbeef/gtkui_api.h>
@@ -54,11 +55,18 @@ typedef enum {
     SNI_MENU_ITEM_QUIT
 } SNIContextMenuItem;
 
-GtkWidget *get_context_menu (void);
+typedef enum {
+	SNI_MENU_ITEM_TYPE_COMMON,
+	SNI_MENU_ITEM_TYPE_CHECKBOX,
+	SNI_MENU_ITEM_TYPE_RADIO,
+	SNI_MENU_ITEM_TYPE_SEPARATOR
+} SNIContextMenuItemType;
 
-GtkWidget *get_context_menu_item (SNIContextMenuItem item);
+DbusmenuMenuitem *get_context_menu (void);
 
-void update_playback_controls(void);
+DbusmenuMenuitem *get_context_menu_item (SNIContextMenuItem item);
+
+void update_playback_controls (void);
 
 void deadbeef_toggle_play_pause (void);
 
