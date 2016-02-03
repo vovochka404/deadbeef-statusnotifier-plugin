@@ -4,7 +4,7 @@
 
 This plugin aims to implement the StatusNotifierItem for DeaDBeeF.
 
-It tendeds to replace default tray icon on DE that supports StatusNotifier items.
+It tends to replace default tray icon on DE that supports StatusNotifier items.
 It also aims to provide tray icon for deadbeef on KDE5/Plasma5, where old xmbedded icons aren't supported anymore.
 
 ### Required packages
