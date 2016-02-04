@@ -4,7 +4,7 @@
 
 This plugin aims to implement the StatusNotifierItem for DeaDBeeF.
 
-It tends to replace default tray icon on DE that supports StatusNotifier items.
+It tends to replace default tray icon on DE that supports StatusNotifierIitem protocol.
 It also aims to provide tray icon for deadbeef on KDE5/Plasma5, where old xmbedded icons aren't supported anymore.
 
 ### Required packages
@@ -36,9 +36,14 @@ Package name with development files for deadbeef will depend on selected ppa.
 
 ### Activation
 
-Once the plugin is installed, restart (or start) deadbeef.
-Go to preference, GUI/Misc section and disable standart tray icon (hide system tray icon).  
-Or you can force StatusNotifierItem to be shown in plugin settings.
+Once the plugin is installed, restart (or start) deadbeef.  
+By default, this plugin will automatically replace default tray icon.  
+You can change this behaviour in plugins settings (open deadbeef's preference, select plugins tab,
+select StatusNotifier plugin, select settings).  
+  
+Note, that by default, this plugin automatically enables "hide tray icon" option in deadbeef's settings (if disabled)
+on startup and restores it's value on shutdown. But if shutdown was not clean (appliaction crashed, killed or something like this)
+then value for "hide tray icon" won't be restored.
 
 #### Possible cmake options
 

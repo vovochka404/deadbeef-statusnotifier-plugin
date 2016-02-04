@@ -34,6 +34,8 @@
         "<tr><td><b>Album:</b></td><td>%s [%s]</td></tr></table>"
 #define TOOLTIP_MAX_LENGTH 1000
 
+gboolean auto_activated = FALSE;
+
 StatusNotifier *icon = NULL;
 
 DB_plugin_action_t *toggle_mainwindow_action = NULL;
@@ -210,7 +212,11 @@ sni_update_tooltip (int state) {
                 g_free (escaped_album);
                 g_free (escaped_date);
 
+#if (DDB_GTKUI_API_LEVEL >= 202)
+                GdkPixbuf * buf = gtkui_plugin->get_cover_art_primary (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, _sni_update_tooltip, NULL);
+#else
                 GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, _sni_update_tooltip, NULL);
+#endif
                 if (!buf) {
                     buf = gtkui_plugin->cover_get_default_pixbuf ();
 
@@ -369,14 +375,32 @@ sni_connect () {
         fprintf (stderr, "sni: failed to find \"toggle_player_window\" gtkui plugin\n");
     }
 
-    sni_configchanged ();
+    int enabled = deadbeef->conf_get_int ("sni.enabled", 1);
+    int enable_automaticaly = deadbeef->conf_get_int ("sni.enable_automaticaly", 1);
+    int hide_tray_icon = deadbeef->conf_get_int ("gtkui.hide_tray_icon", 0);
+
+    if (enabled && enable_automaticaly && !hide_tray_icon) {
+        auto_activated = TRUE;
+        deadbeef->conf_set_int ("gtkui.hide_tray_icon", 1);
+    }
+    else
+        sni_configchanged ();
+
     return 0;
+}
+
+int
+sni_disconnect () {
+    if (auto_activated) {
+        deadbeef->conf_set_int ("gtkui.hide_tray_icon", 0);
+    }
 }
 
 
 static const char settings_dlg[] =
     "property \"Enable StatusNotifierItem\" checkbox sni.enabled 1;\n"
     "property \"Allow only if standart GUI tray icon is disabled\" checkbox sni.check_std_icon 1;\n"
+    "property \"Automaticly disable standart GUI tray icon\" checkbox sni.enable_automaticaly 1;\n"
 ;
 
 
@@ -385,7 +409,7 @@ static DB_misc_t plugin = {
     .plugin.api_vmajor = 1,
     .plugin.api_vminor = 5,
     .plugin.version_major = 1,
-    .plugin.version_minor = 1,
+    .plugin.version_minor = 2,
 #if GTK_CHECK_VERSION (3, 0, 0)
     .plugin.id = "sni_gtk3",
     .plugin.name = "StatusNotifierItem for GTK3 UI",
@@ -415,6 +439,7 @@ static DB_misc_t plugin = {
     .plugin.configdialog = settings_dlg,
     .plugin.message = sni_message,
     .plugin.connect = sni_connect,
+    .plugin.disconnect = sni_disconnect,
 };
 
 DB_plugin_t *
