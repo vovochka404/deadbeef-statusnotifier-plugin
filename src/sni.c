@@ -25,13 +25,13 @@
 
 
 #define TOOLTIP_FORMAT_WO_YEAR "%s"\
-        "<table><tr><td><b>Title:</b></td><td>%s</td></tr>"\
-        "<tr><td><b>Artist:</b></td><td>%s</td></tr>"\
-        "<tr><td><b>Album:</b></td><td>%s</td></tr></table>"
+        "<b>Title:</b> %s<br/>"\
+        "<b>Artist:</b> %s<br/>"\
+        "<b>Album:</b> %s"
 #define TOOLTIP_FORMAT "%s"\
-        "<table><tr><td><b>Title:</td><td>%s</td></tr>"\
-        "<tr><td><b>Artist:</b></td><td>%s</td></tr>"\
-        "<tr><td><b>Album:</b></td><td>%s [%s]</td></tr></table>"
+        "<b>Title: </b>%s<br/>"\
+        "<b>Artist:</b> %s<br/>"\
+        "<b>Album:</b> %s [%s]"
 #define TOOLTIP_MAX_LENGTH 1000
 
 gboolean auto_activated = FALSE;
