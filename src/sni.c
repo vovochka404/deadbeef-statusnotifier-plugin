@@ -394,6 +394,7 @@ sni_disconnect () {
     if (auto_activated) {
         deadbeef->conf_set_int ("gtkui.hide_tray_icon", 0);
     }
+    return 0;
 }
 
 
@@ -409,7 +410,7 @@ static DB_misc_t plugin = {
     .plugin.api_vmajor = 1,
     .plugin.api_vminor = 5,
     .plugin.version_major = 1,
-    .plugin.version_minor = 2,
+    .plugin.version_minor = 3,
 #if GTK_CHECK_VERSION (3, 0, 0)
     .plugin.id = "sni_gtk3",
     .plugin.name = "StatusNotifierItem for GTK3 UI",
