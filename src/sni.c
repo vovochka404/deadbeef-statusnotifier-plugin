@@ -34,12 +34,12 @@
         "<b>Album:</b> %s [%s]"
 #define TOOLTIP_MAX_LENGTH 1000
 
-gboolean auto_activated = FALSE;
+static gboolean auto_activated = FALSE;
 
-StatusNotifier *icon = NULL;
+static StatusNotifier *icon = NULL;
 
-DB_plugin_action_t *toggle_mainwindow_action = NULL;
-DB_plugin_action_t *preferences_action = NULL;
+static DB_plugin_action_t *toggle_mainwindow_action = NULL;
+static DB_plugin_action_t *preferences_action = NULL;
 
 void sni_update_status ();
 
@@ -154,6 +154,7 @@ sni_update_tooltip (int state) {
     if (!icon)
         return;
 
+    g_debug("sni_update_tooltip, status: %d", state);
     DB_output_t *output;
     output = deadbeef->get_output ();
 
@@ -212,11 +213,13 @@ sni_update_tooltip (int state) {
                 g_free (escaped_album);
                 g_free (escaped_date);
 
+                g_debug("Going to query coverart");
 #if (DDB_GTKUI_API_LEVEL >= 202)
-                GdkPixbuf * buf = gtkui_plugin->get_cover_art_primary (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, _sni_update_tooltip, NULL);
+                GdkPixbuf * buf = gtkui_plugin->get_cover_art_primary (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
 #else
-                GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, _sni_update_tooltip, NULL);
+                GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf  (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
 #endif
+                g_debug("Got GdbPixbuf: %d", buf);
                 if (!buf) {
                     buf = gtkui_plugin->cover_get_default_pixbuf ();
 
@@ -246,6 +249,7 @@ void _sni_update_tooltip (void *user_date) {
 
 void
 sni_update_status (int state) {
+    g_debug("sni_update_status, status: %d", state);
     DB_output_t *output;
     DbusmenuMenuitem *stop_item;
 
@@ -329,23 +333,28 @@ static int
 sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     switch (id) {
     case DB_EV_CONFIGCHANGED:
+        g_debug("Event: DB_EV_CONFIGCHANGED");
         sni_configchanged ();
         update_playback_controls ();
         break;
 
     case DB_EV_TRACKINFOCHANGED:
+        g_debug("Event: DB_EV_TRACKINFOCHANGED");
         sni_update_tooltip (-1);
         break;
 
     case DB_EV_PAUSED:
+        g_debug("Event: DB_EV_PAUSED");
         sni_update_status (-1);
         break;
 
     case DB_EV_STOP:
+        g_debug("Event: DB_EV_STOP");
         sni_update_status (OUTPUT_STATE_STOPPED);
         break;
 
     case DB_EV_SONGSTARTED:
+        g_debug("Event: DB_EV_SONGSTARTED");
         sni_update_status (OUTPUT_STATE_PLAYING);
         break;
     }
