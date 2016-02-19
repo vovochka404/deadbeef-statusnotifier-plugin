@@ -214,7 +214,6 @@ get_context_menu (void) {
 DbusmenuMenuitem*
 create_menu_item (gchar *label, gchar *icon_name, SNIContextMenuItemType item_type) {
     DbusmenuMenuitem *item;
-    GtkWidget *icon;
 
     item = dbusmenu_menuitem_new ();
     dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, label);
