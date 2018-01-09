@@ -8,7 +8,8 @@ It tends to replace default tray icon on DE that supports StatusNotifierIitem pr
 It also aims to provide tray icon for deadbeef on KDE5/Plasma5, where old xmbedded icons aren't supported anymore.
 
 ### Required packages
-`cmake` 
+`cmake`
+
 `gtk 2.x` - for gtk 2 version  
 `gtk 3.x` - for gtk 3 version  
 `libdbusmenu-glib-0.4` - for dbusmenu  
@@ -55,4 +56,5 @@ then value for "hide tray icon" won't be restored.
 `-DUSE_GTK` - Whether to build gtk2 verion or not. Default: ON  
 `-DUSE3_GTK` - Whether to build gtk3 verion or not. Default: ON  
 `-DCMAKE_INSTALL_PREFIX` - Where to install. Default: `/usr/local`
+
 `-DLIB_INSTALL_DIR` - Name of system libdir. Default: `lib`  
