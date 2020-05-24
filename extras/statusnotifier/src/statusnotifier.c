@@ -2087,7 +2087,7 @@ status_notifier_get_context_menu (StatusNotifier          *sn)
 {
     StatusNotifierPrivate *priv;
 
-    g_return_if_fail (IS_STATUS_NOTIFIER (sn));
+    g_return_val_if_fail (IS_STATUS_NOTIFIER (sn), NULL);
     priv = sn->priv;
 
     return priv->menu;
@@ -2124,7 +2124,7 @@ status_notifier_get_item_is_menu (StatusNotifier          *sn)
 {
     StatusNotifierPrivate *priv;
 
-    g_return_if_fail (IS_STATUS_NOTIFIER (sn));
+    g_return_val_if_fail (IS_STATUS_NOTIFIER (sn), FALSE);
     priv = sn->priv;
 
     return priv->is_menu;
