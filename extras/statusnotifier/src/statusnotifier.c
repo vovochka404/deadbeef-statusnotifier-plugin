@@ -913,7 +913,7 @@ dbus_notify (StatusNotifier *sn, guint prop)
     {
         case PROP_STATUS:
             {
-                const gchar const *s_status[] = {
+                const gchar *s_status[] = {
                     "Passive",
                     "Active",
                     "NeedsAttention"
@@ -1621,7 +1621,7 @@ get_prop (GDBusConnection        *conn,
         return g_variant_new ("s", priv->id);
     else if (!g_strcmp0 (property, "Category"))
     {
-        const gchar const *s_category[] = {
+        const gchar *s_category[] = {
             "ApplicationStatus",
             "Communications",
             "SystemServices",
@@ -1633,7 +1633,7 @@ get_prop (GDBusConnection        *conn,
         return g_variant_new ("s", (priv->title) ? priv->title : "");
     else if (!g_strcmp0 (property, "Status"))
     {
-        const gchar const *s_status[] = {
+        const gchar *s_status[] = {
             "Passive",
             "Active",
             "NeedsAttention"
