@@ -33,6 +33,10 @@
 
 #define GDK_WINDOW_XROOTWIN(win)      GDK_WINDOW_XID(gdk_screen_get_root_window (gdk_window_get_screen (win)))
 
+#if defined(GDK_IS_DISPLAY) && !defined(GDK_IS_X11_DISPLAY)
+#define GDK_IS_X11_DISPLAY(display) GDK_IS_DISPLAY(display)
+#endif
+
 void
 gdk_x11_window_force_focus (GdkWindow *window,
                             guint32    timestamp)
