@@ -54,7 +54,7 @@ then value for "hide tray icon" won't be restored.
 #### Possible cmake options
 
 `-DUSE_GTK` - Whether to build gtk2 verion or not. Default: ON  
-`-DUSE3_GTK` - Whether to build gtk3 verion or not. Default: ON  
+`-DUSE_GTK3` - Whether to build gtk3 verion or not. Default: ON  
 `-DCMAKE_INSTALL_PREFIX` - Where to install. Default: `/usr/local`
 
 `-DLIB_INSTALL_DIR` - Name of system libdir. Default: `lib`  
