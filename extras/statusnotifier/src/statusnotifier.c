@@ -179,7 +179,7 @@ static void     status_notifier_get_property    (GObject            *object,
                                                  GParamSpec         *pspec);
 static void     status_notifier_finalize        (GObject            *object);
 
-G_DEFINE_TYPE (StatusNotifier, status_notifier, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (StatusNotifier, status_notifier, G_TYPE_OBJECT)
 
 static void
 status_notifier_class_init (StatusNotifierClass *klass)
@@ -645,15 +645,12 @@ status_notifier_class_init (StatusNotifierClass *klass)
             2,
             G_TYPE_INT,
             TYPE_STATUS_NOTIFIER_SCROLL_ORIENTATION);
-
-    g_type_class_add_private (klass, sizeof (StatusNotifierPrivate));
 }
 
 static void
 status_notifier_init (StatusNotifier *sn)
 {
-    sn->priv = G_TYPE_INSTANCE_GET_PRIVATE (sn,
-            TYPE_STATUS_NOTIFIER, StatusNotifierPrivate);
+    sn->priv = status_notifier_get_instance_private (sn);
 }
 
 static void
