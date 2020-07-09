@@ -55,9 +55,9 @@ gdk_x11_window_force_focus (GdkWindow *window,
     {
         if (!timestamp)
         {
-            GTimeVal t;
-            g_get_current_time (&t);
-            timestamp = t.tv_sec;
+#if defined(GDK_CURRENT_TIME)
+            timestamp = GDK_CURRENT_TIME; /* in fact it doesn't needed */
+#endif
         }
 
         XClientMessageEvent xclient;
