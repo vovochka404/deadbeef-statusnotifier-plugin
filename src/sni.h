@@ -43,8 +43,7 @@
 
 #include <extras/statusnotifier/src/statusnotifier.h>
 
-DB_functions_t *deadbeef;
-static ddb_gtkui_t *gtkui_plugin;
+DB_functions_t * deadbeef_get_instance (void);
 
 typedef enum {
     SNI_MENU_ITEM_PLAY,

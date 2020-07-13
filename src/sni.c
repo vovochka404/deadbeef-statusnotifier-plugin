@@ -41,7 +41,15 @@ static StatusNotifier *icon = NULL;
 static DB_plugin_action_t *toggle_mainwindow_action = NULL;
 static DB_plugin_action_t *preferences_action = NULL;
 
+DB_functions_t *deadbeef = NULL;
+static ddb_gtkui_t *gtkui_plugin;
+
 void sni_update_status ();
+
+DB_functions_t *
+deadbeef_get_instance (void) {
+    return deadbeef;
+}
 
 void
 on_activate_requested (void) {

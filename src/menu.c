@@ -49,31 +49,49 @@ create_menu_item (gchar *label, gchar *icon_name, SNIContextMenuItemType item_ty
 
 void
 on_quit_activate (DbusmenuMenuitem *menuitem) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     deadbeef->sendmessage (DB_EV_TERMINATE, 0, 0, 0);
 }
 
 void
 on_play_activate (DbusmenuMenuitem *menuitem) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     deadbeef_toggle_play_pause ();
 }
 
 void
 on_stop_activate (DbusmenuMenuitem *menuitem) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     deadbeef->sendmessage (DB_EV_STOP, 0, 0, 0);
 }
 
 void
 on_next_activate (DbusmenuMenuitem *menuitem) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     deadbeef->sendmessage (DB_EV_NEXT, 0, 0, 0);
 }
 
 void
 on_prev_activate (DbusmenuMenuitem *menuitem) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     deadbeef->sendmessage (DB_EV_PREV, 0, 0, 0);
 }
 
 void
 on_random_activate (DbusmenuMenuitem *menuitem) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     deadbeef->sendmessage (DB_EV_PLAY_RANDOM, 0, 0, 0);
 }
 
@@ -84,6 +102,9 @@ on_pref_activate (DbusmenuMenuitem *menuitem) {
 
 void
 on_playback_order_activate (DbusmenuMenuitem *menuitem) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (menuitem), "pb_data"));
     deadbeef->conf_set_int ("playback.order", val);
     deadbeef->sendmessage (DB_EV_CONFIGCHANGED, 0, 0, 0);
@@ -91,6 +112,9 @@ on_playback_order_activate (DbusmenuMenuitem *menuitem) {
 
 void
 on_playback_loop_activate (DbusmenuMenuitem *menuitem) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (menuitem), "pb_data"));
     deadbeef->conf_set_int ("playback.loop", val);
     deadbeef->sendmessage (DB_EV_CONFIGCHANGED, 0, 0, 0);
@@ -104,6 +128,9 @@ void check_list (gpointer item, gpointer data) {
 
 void
 update_playback_controls (void) {
+    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    if (deadbeef == NULL)
+        return;
     guint32 order = deadbeef->conf_get_int ("playback.order", 0);
     guint32 loop  = deadbeef->conf_get_int ("playback.loop", 0);
 
