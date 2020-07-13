@@ -219,7 +219,7 @@ sni_update_tooltip (int state) {
 #else
                 GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf  (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
 #endif
-                g_debug("Got GdbPixbuf: %d", buf);
+                g_debug("Got GdbPixbuf: %d", (int) buf);
                 if (!buf) {
                     buf = gtkui_plugin->cover_get_default_pixbuf ();
 
