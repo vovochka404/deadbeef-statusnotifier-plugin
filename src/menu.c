@@ -96,16 +96,16 @@ on_playback_loop_activate (DbusmenuMenuitem *menuitem) {
     deadbeef->sendmessage (DB_EV_CONFIGCHANGED, 0, 0, 0);
 }
 
+void check_list (gpointer item, gpointer data) {
+    guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (item), "pb_data"));
+    dbusmenu_menuitem_property_set_int (DBUSMENU_MENUITEM (item), DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                val == GPOINTER_TO_UINT (data) ? DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+}
+
 void
 update_playback_controls (void) {
     guint32 order = deadbeef->conf_get_int ("playback.order", 0);
     guint32 loop  = deadbeef->conf_get_int ("playback.loop", 0);
-
-    void check_list (gpointer item, gpointer data) {
-        guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (item), "pb_data"));
-        dbusmenu_menuitem_property_set_int (DBUSMENU_MENUITEM (item), DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                    val == GPOINTER_TO_UINT (data) ? DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-    }
 
     g_slist_foreach (pb_order, check_list, GUINT_TO_POINTER (order));
     g_slist_foreach (pb_loop, check_list, GUINT_TO_POINTER (loop));
