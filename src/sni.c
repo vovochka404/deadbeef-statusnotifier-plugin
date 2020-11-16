@@ -71,6 +71,10 @@ on_activate_requested (void) {
             else {
                 gtk_window_present (GTK_WINDOW (mainwin));
             }
+            gtk_window_move(GTK_WINDOW (mainwin),
+                            deadbeef->conf_get_int("mainwin.geometry.x", 0),
+                            deadbeef->conf_get_int("mainwin.geometry.y", 0));
+            
             gdk_x11_window_force_focus (gdk_window, 0);
         }
     }
