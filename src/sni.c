@@ -35,6 +35,7 @@
 #define TOOLTIP_MAX_LENGTH 1000
 
 static gboolean auto_activated = FALSE;
+static volatile gboolean sni_loaded = FALSE;
 
 static StatusNotifier *icon = NULL;
 
@@ -43,6 +44,7 @@ static DB_plugin_action_t *preferences_action = NULL;
 
 DB_functions_t *deadbeef = NULL;
 static ddb_gtkui_t *gtkui_plugin;
+static DB_misc_t plugin;
 
 void sni_update_status ();
 
@@ -110,6 +112,27 @@ on_scroll_requested (StatusNotifier *sn,
     deadbeef->volume_set_db (vol);
 }
 
+static void 
+callback_wait_notifier_register (void* ctx) {
+    StatusNotifierState state = STATUS_NOTIFIER_STATE_NOT_REGISTERED;
+    StatusNotifier* sni_ctx = (StatusNotifier*)ctx;
+
+    status_notifier_register (sni_ctx);
+    
+    while (TRUE) {
+        state = status_notifier_get_state(sni_ctx);
+        if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
+            sleep(1);
+            sni_loaded = TRUE;
+            sni_update_status(-1);
+            return;
+        }
+        if (state == STATUS_NOTIFIER_STATE_FAILED) {
+            return;
+        }
+    }
+}
+
 void
 sni_enable (int enable) {
     if ((icon && enable) || (!icon && !enable))
@@ -124,9 +147,9 @@ sni_enable (int enable) {
         g_signal_connect (icon, "activate", (GCallback) on_activate_requested, NULL);
         g_signal_connect (icon, "secondary-activate", (GCallback) on_sec_activate_requested, NULL);
         g_signal_connect (icon, "scroll", (GCallback) on_scroll_requested, NULL);
-
-        status_notifier_register (icon);
-        sni_update_status ();
+        
+        // Waiting notifier register process in separate thread
+        deadbeef->thread_start(callback_wait_notifier_register, (void*)icon);
     }
     else {
         g_object_unref (icon);
@@ -175,11 +198,11 @@ sni_update_tooltip (int state) {
             state = output->state ();
 
         switch (state) {
-            case OUTPUT_STATE_STOPPED:
+            case DDB_PLAYBACK_STATE_STOPPED:
                 status_notifier_set_tooltip (icon, "deadbeef", "DeaDBeeF", _("Playback stopped"));
                 break;
-            case OUTPUT_STATE_PAUSED:
-            case OUTPUT_STATE_PLAYING:
+            case DDB_PLAYBACK_STATE_PAUSED:
+            case DDB_PLAYBACK_STATE_PLAYING:
             {
                 DB_playItem_t *track = deadbeef->streamer_get_playing_track ();
                 static gchar *ns = NULL;
@@ -264,8 +287,10 @@ sni_update_status (int state) {
     g_debug("sni_update_status, status: %d", state);
     DB_output_t *output;
     DbusmenuMenuitem *stop_item;
-
+    
     if (!icon)
+        return;
+    if (sni_loaded == FALSE)
         return;
 
     output = deadbeef->get_output ();
@@ -273,23 +298,24 @@ sni_update_status (int state) {
     if (output) {
         if (state < 0)
             state = output->state ();
-        switch (state) {
-            case OUTPUT_STATE_PLAYING:
-                status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-start");
+        
+        // FIXME Data race. Output maybe not initialized and returned invalid state value.
+        // Temporary FIX - use sleep(1) in watchdog 
 
+        switch (state) {
+            case DDB_PLAYBACK_STATE_PLAYING:
+                status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-start");
                 stop_item = get_context_menu_item (SNI_MENU_ITEM_STOP);
                 dbusmenu_menuitem_property_set_bool (stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 
                 sni_toggle_play_pause (0);
                 break;
-            case OUTPUT_STATE_PAUSED:
+            case DDB_PLAYBACK_STATE_PAUSED:
                 status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-pause");
-
                 sni_toggle_play_pause (1);
                 break;
-            case OUTPUT_STATE_STOPPED:
+            case DDB_PLAYBACK_STATE_STOPPED:
                 status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, NULL);
-
                 stop_item = get_context_menu_item (SNI_MENU_ITEM_STOP);
                 dbusmenu_menuitem_property_set_bool (stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
 
@@ -312,10 +338,10 @@ deadbeef_toggle_play_pause (void) {
     output = deadbeef->get_output ();
     if (output) {
         switch (output->state ()) {
-            case OUTPUT_STATE_PLAYING:
+            case DDB_PLAYBACK_STATE_PLAYING:
                 deadbeef->sendmessage (DB_EV_TOGGLE_PAUSE, 0, 0, 0);
                 return;
-            case OUTPUT_STATE_PAUSED:
+            case DDB_PLAYBACK_STATE_PAUSED:
                 deadbeef->sendmessage (DB_EV_TOGGLE_PAUSE, 0, 0, 0);
                 return;
         }
@@ -359,15 +385,17 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
         g_debug("Event: DB_EV_PAUSED");
         sni_update_status (-1);
         break;
-
+    
     case DB_EV_STOP:
         g_debug("Event: DB_EV_STOP");
-        sni_update_status (OUTPUT_STATE_STOPPED);
+    case DB_EV_SONGFINISHED:
+        g_debug("Event: DB_EV_SONGFINISHSED");
+        sni_update_status (DDB_PLAYBACK_STATE_STOPPED);
         break;
 
     case DB_EV_SONGSTARTED:
         g_debug("Event: DB_EV_SONGSTARTED");
-        sni_update_status (OUTPUT_STATE_PLAYING);
+        sni_update_status (DDB_PLAYBACK_STATE_PLAYING);
         break;
     }
     return 0;
