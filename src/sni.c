@@ -125,9 +125,13 @@ callback_wait_notifier_register (void* ctx) {
             sleep(1);
             sni_loaded = TRUE;
             sni_update_status(-1);
+            deadbeef->log_detailed((DB_plugin_t*)(&plugin), DDB_LOG_LAYER_INFO,
+                                    "%s: %s\n","Status notifier register success", status_notifier_get_id(sni_ctx));
             return;
         }
         if (state == STATUS_NOTIFIER_STATE_FAILED) {
+            deadbeef->log_detailed((DB_plugin_t*)(&plugin), DDB_LOG_LAYER_DEFAULT,
+                                    "%s: %s\n","Status notifier register failed", status_notifier_get_id(sni_ctx));
             return;
         }
     }
@@ -387,7 +391,6 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
         break;
     
     case DB_EV_STOP:
-        g_debug("Event: DB_EV_STOP");
     case DB_EV_SONGFINISHED:
         g_debug("Event: DB_EV_SONGFINISHSED");
         sni_update_status (DDB_PLAYBACK_STATE_STOPPED);
@@ -405,7 +408,7 @@ int
 sni_connect () {
     gtkui_plugin = (ddb_gtkui_t *)deadbeef->plug_get_for_id (DDB_GTKUI_PLUGIN_ID);
     if (!gtkui_plugin) {
-        fprintf (stderr, "sni: can't find gtkui plugin\n");
+        deadbeef->log_detailed((DB_plugin_t*)(&plugin), DDB_LOG_LAYER_DEFAULT, "sni: can't find gtkui plugin\n");
         return -1;
     }
 
@@ -421,7 +424,7 @@ sni_connect () {
     }
 
     if (!toggle_mainwindow_action) {
-        fprintf (stderr, "sni: failed to find \"toggle_player_window\" gtkui plugin\n");
+        deadbeef->log_detailed ((DB_plugin_t*)(&plugin), DDB_LOG_LAYER_DEFAULT, "sni: failed to find \"toggle_player_window\" gtkui plugin\n");
     }
 
     int enabled = deadbeef->conf_get_int ("sni.enabled", 1);
@@ -456,6 +459,7 @@ static const char settings_dlg[] =
 
 static DB_misc_t plugin = {
     .plugin.type = DB_PLUGIN_MISC,
+    .plugin.flags = DDB_PLUGIN_FLAG_LOGGING,
     .plugin.api_vmajor = 1,
     .plugin.api_vminor = 5,
     .plugin.version_major = 1,
