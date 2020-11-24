@@ -453,6 +453,8 @@ sni_disconnect () {
     if (auto_activated) {
         deadbeef->conf_set_int ("gtkui.hide_tray_icon", 0);
     }
+    if (icon)
+        g_object_unref(icon);
     return 0;
 }
 
