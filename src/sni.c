@@ -468,7 +468,7 @@ static DB_misc_t plugin = {
     .plugin.type = DB_PLUGIN_MISC,
     .plugin.flags = DDB_PLUGIN_FLAG_LOGGING,
     .plugin.api_vmajor = 1,
-    .plugin.api_vminor = 5,
+    .plugin.api_vminor = 11,
     .plugin.version_major = 1,
     .plugin.version_minor = 3,
 #if GTK_CHECK_VERSION (3, 0, 0)
