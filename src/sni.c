@@ -389,10 +389,17 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
         g_debug("Event: DB_EV_PAUSED");
         sni_update_status (-1);
         break;
-    
+    case DB_EV_SONGCHANGED:
+        {
+            ddb_event_trackchange_t* ev_change = (ddb_event_trackchange_t*)ctx;
+            if (ev_change->to == NULL) {
+                g_debug("Event: DB_EV_SONGCHANGED");
+                sni_update_status (DDB_PLAYBACK_STATE_STOPPED);
+            }
+            break;
+        }
     case DB_EV_STOP:
-    case DB_EV_SONGFINISHED:
-        g_debug("Event: DB_EV_SONGFINISHSED");
+        g_debug("Event: DB_EV_STOP");
         sni_update_status (DDB_PLAYBACK_STATE_STOPPED);
         break;
 
