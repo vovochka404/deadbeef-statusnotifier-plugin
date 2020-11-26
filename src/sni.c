@@ -23,15 +23,24 @@
 #include "sni.h"
 #include "x11-force-focus.h"
 
-
 #define TOOLTIP_FORMAT_WO_YEAR "%s"\
         "<b>Title:</b> %s<br/>"\
         "<b>Artist:</b> %s<br/>"\
         "<b>Album:</b> %s"
 #define TOOLTIP_FORMAT "%s"\
-        "<b>Title: </b>%s<br/>"\
+        "<b>Title:</b> %s<br/>"\
         "<b>Artist:</b> %s<br/>"\
         "<b>Album:</b> %s [%s]"
+
+#define TOOLTIP_FORMAT_PLAIN_WO_YEAR "[%s]"\
+        "\nTitle: %s"\
+        "\nArtist: %s"\
+        "\nAlbum: %s"
+#define TOOLTIP_FORMAT_PLAIN "[%s]"\
+        "\nTitle: %s"\
+        "\nArtist: %s"\
+        "\nAlbum: %s [%s]"
+
 #define TOOLTIP_MAX_LENGTH 1000
 
 static gboolean auto_activated = FALSE;
@@ -196,6 +205,8 @@ void
 sni_update_tooltip (int state) {
     if (!icon)
         return;
+    if (deadbeef->conf_get_int("sni.enable_tooltip", 0) == 0)
+        return;
 
     g_debug("sni_update_tooltip, status: %d", state);
     DB_output_t *output;
@@ -212,11 +223,14 @@ sni_update_tooltip (int state) {
             case DDB_PLAYBACK_STATE_PAUSED:
             case DDB_PLAYBACK_STATE_PLAYING:
             {
+                int tt_plain_text = deadbeef->conf_get_int("sni.tooltip_plain_text", 0);
+
                 DB_playItem_t *track = deadbeef->streamer_get_playing_track ();
                 static gchar *ns = NULL;
                 if (!ns)
                     ns = _("not specified");
 
+                // HTML KDE-style
                 if (!track) {
                     status_notifier_set_tooltip (icon, "deadbeef", "DeaDBeeF", _("Playing"));
                     break;
@@ -238,44 +252,58 @@ sni_update_tooltip (int state) {
                 gchar *escaped_artist = (artist ? artist : albumArtist) ? g_markup_escape_text (artist ? artist : albumArtist, -1) : NULL;
                 gchar *escaped_album  = album  ? g_markup_escape_text (album, -1) : NULL;
                 gchar *escaped_date   = date   ? g_markup_escape_text (date, -1)  : NULL;
-
+                
                 gchar title_body[TOOLTIP_MAX_LENGTH];
-                date ?
-                    g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT), state == OUTPUT_STATE_PAUSED ? _("Playback paused<br>\n") : "",
-                               escaped_title  ? escaped_title  : ns,
-                               escaped_artist ? escaped_artist : ns,
-                               escaped_album  ? escaped_album  : ns,
-                               escaped_date) :
-                    g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT_WO_YEAR), state == OUTPUT_STATE_PAUSED ? _("Playback paused<br>\n") : "",
-                               escaped_title  ? escaped_title  : ns,
-                               escaped_artist ? escaped_artist : ns,
-                               escaped_album  ? escaped_album  : ns);
+                if (tt_plain_text) {
+                    //TODO
+                    date ?
+                        g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT_PLAIN), state == OUTPUT_STATE_PAUSED ? _("Playback paused") : _("Playback played"),
+                                   escaped_title  ? escaped_title  : ns,
+                                   escaped_artist ? escaped_artist : ns,
+                                   escaped_album  ? escaped_album  : ns,
+                                   escaped_date) :
+                        g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT_PLAIN_WO_YEAR), state == OUTPUT_STATE_PAUSED ? _("Playback paused") : _("Playback played"),
+                                   escaped_title  ? escaped_title  : ns,
+                                   escaped_artist ? escaped_artist : ns,
+                                   escaped_album  ? escaped_album  : ns);
+                } else {
+                    date ?
+                        g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT), state == OUTPUT_STATE_PAUSED ? _("Playback paused") : _("Playback played"),
+                                   escaped_title  ? escaped_title  : ns,
+                                   escaped_artist ? escaped_artist : ns,
+                                   escaped_album  ? escaped_album  : ns,
+                                   escaped_date) :
+                        g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT_WO_YEAR), state == OUTPUT_STATE_PAUSED ? _("Playback paused") :  _("Playback played"),
+                                   escaped_title  ? escaped_title  : ns,
+                                   escaped_artist ? escaped_artist : ns,
+                                   escaped_album  ? escaped_album  : ns);
+                }
 
                 g_free (escaped_title);
                 g_free (escaped_artist);
                 g_free (escaped_album);
                 g_free (escaped_date);
-
-                g_debug("Going to query coverart");
+                
+                if (tt_plain_text == 0) {
+                    g_debug("Going to query coverart");
 #if (DDB_GTKUI_API_LEVEL >= 202)
-                GdkPixbuf * buf = gtkui_plugin->get_cover_art_primary (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
+                    GdkPixbuf * buf = gtkui_plugin->get_cover_art_primary (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
 #else
-                GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf  (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
+                    GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf  (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
 #endif
-                g_debug("Got GdbPixbuf: %d", (int) buf);
-                if (!buf) {
-                    buf = gtkui_plugin->cover_get_default_pixbuf ();
+                    g_debug("Got GdbPixbuf: %zu", (uintptr_t) buf);
+                    if (!buf) {
+                        buf = gtkui_plugin->cover_get_default_pixbuf ();
 
-                    if (buf)
-                        status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, buf);
+                        if (buf)
+                            status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, buf);
+                        else
+                            status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");
+                    }
                     else
-                        status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");
+                        status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, buf);
                 }
-                else
-                    status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, buf);
-
                 status_notifier_set_tooltip_body (icon, title_body);
-
                 deadbeef->pl_item_unref (track);
                 break;
             }
@@ -382,6 +410,9 @@ sni_configchanged (void) {
 static int
 sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     switch (id) {
+    case DB_EV_TERMINATE:
+        sni_loaded = FALSE;
+        break;
     case DB_EV_CONFIGCHANGED:
         g_debug("Event: DB_EV_CONFIGCHANGED");
         sni_configchanged ();
@@ -472,9 +503,10 @@ static const char settings_dlg[] =
     "property \"Allow only if standart GUI tray icon is disabled\" checkbox sni.check_std_icon 1;\n"
     "property \"Automaticly disable standart GUI tray icon\" checkbox sni.enable_automaticaly 1;\n"
 
-    "property \"Notifier registration waiting time (sec.)\" entry sni.waiting_sec 60;\n"
     "property \"Use animated icon (SNI overlay enable)\" checkbox sni.animated 1;\n"
     "property \"Enable SNI tooltip\" checkbox sni.enable_tooltip 1;\n"
+    "property \"Use plain text tooltip (if tooltip enabled)\" checkbox sni.tooltip_plain_text 0;\n"
+    "property \"Notifier registration waiting time (sec.)\" entry sni.waiting_sec 60;\n"
 ;
 
 
