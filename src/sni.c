@@ -119,7 +119,8 @@ callback_wait_notifier_register (void* ctx) {
 
     status_notifier_register (sni_ctx);
     
-    while (TRUE) {
+    uint32_t wait_time = deadbeef->conf_get_int("sni.waiting_sec", 60);
+    for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
             sleep(1);
@@ -134,7 +135,10 @@ callback_wait_notifier_register (void* ctx) {
                                     "%s: %s\n","Status notifier register failed", status_notifier_get_id(sni_ctx));
             return;
         }
+        sleep(1);
     }
+    deadbeef->log_detailed((DB_plugin_t*)(&plugin), DDB_LOG_LAYER_DEFAULT,
+                            "%s: %s\n","Status notifier register failed (by timeout)", status_notifier_get_id(sni_ctx));
 }
 
 void
@@ -304,22 +308,26 @@ sni_update_status (int state) {
             state = output->state ();
         
         // FIXME Data race. Output maybe not initialized and returned invalid state value.
-        // Temporary FIX - use sleep(1) in watchdog 
-
+        // Temporary hotfix - use sleep(1) in function callback_wait_notifier_register()
+        
+        int enable_overlay = deadbeef->conf_get_int("sni.animated",1);
         switch (state) {
             case DDB_PLAYBACK_STATE_PLAYING:
-                status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-start");
+                if (enable_overlay)
+                    status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-start");
                 stop_item = get_context_menu_item (SNI_MENU_ITEM_STOP);
                 dbusmenu_menuitem_property_set_bool (stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 
                 sni_toggle_play_pause (0);
                 break;
             case DDB_PLAYBACK_STATE_PAUSED:
-                status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-pause");
+                if (enable_overlay)
+                    status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-pause");
                 sni_toggle_play_pause (1);
                 break;
             case DDB_PLAYBACK_STATE_STOPPED:
-                status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, NULL);
+                if (enable_overlay)
+                    status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, NULL);
                 stop_item = get_context_menu_item (SNI_MENU_ITEM_STOP);
                 dbusmenu_menuitem_property_set_bool (stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
 
@@ -463,6 +471,10 @@ static const char settings_dlg[] =
     "property \"Enable StatusNotifierItem\" checkbox sni.enabled 1;\n"
     "property \"Allow only if standart GUI tray icon is disabled\" checkbox sni.check_std_icon 1;\n"
     "property \"Automaticly disable standart GUI tray icon\" checkbox sni.enable_automaticaly 1;\n"
+
+    "property \"Notifier registration waiting time (sec.)\" entry sni.waiting_sec 60;\n"
+    "property \"Use animated icon (SNI overlay enable)\" checkbox sni.animated 1;\n"
+    "property \"Enable SNI tooltip\" checkbox sni.enable_tooltip 1;\n"
 ;
 
 
