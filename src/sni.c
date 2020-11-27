@@ -101,16 +101,24 @@ on_scroll_requested (StatusNotifier *sn,
                      int diff,
                      StatusNotifierScrollOrientation direction)
 {
+    if (deadbeef->conf_get_int("sni.volume_hdirect_ignore", 1))
+        if (direction == STATUS_NOTIFIER_SCROLL_ORIENTATION_HORIZONTAL)
+            return;
+    
+    if (deadbeef->conf_get_int("sni.volume_reverse", 0))
+        diff *= -1;
+
     float vol = deadbeef->volume_get_db ();
     int sens = deadbeef->conf_get_int ("gtkui.tray_volume_sensitivity", 1);
-
-    if (diff > 0) {
-        vol += sens;
+    
+    if (diff) {
+        if (diff > 0) {
+            vol += sens;
+        }
+        else {
+            vol -= sens;
+        }
     }
-    else {
-        vol -= sens;
-    }
-
     if (vol > 0) {
         vol = 0;
     }
@@ -255,7 +263,6 @@ sni_update_tooltip (int state) {
                 
                 gchar title_body[TOOLTIP_MAX_LENGTH];
                 if (tt_plain_text) {
-                    //TODO
                     date ?
                         g_snprintf (title_body, TOOLTIP_MAX_LENGTH, _(TOOLTIP_FORMAT_PLAIN), state == OUTPUT_STATE_PAUSED ? _("Playback paused") : _("Playback played"),
                                    escaped_title  ? escaped_title  : ns,
@@ -506,7 +513,11 @@ static const char settings_dlg[] =
     "property \"Use animated icon (SNI overlay enable)\" checkbox sni.animated 1;\n"
     "property \"Enable SNI tooltip\" checkbox sni.enable_tooltip 1;\n"
     "property \"Use plain text tooltip (if tooltip enabled)\" checkbox sni.tooltip_plain_text 0;\n"
-    "property \"Notifier registration waiting time (sec.)\" entry sni.waiting_sec 60;\n"
+    
+    "property \"Volume control horizontal scroll ignore\" checkbox sni.volume_hdirect_ignore 1;\n"
+    "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
+
+    "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_sec 60;\n"
 ;
 
 
