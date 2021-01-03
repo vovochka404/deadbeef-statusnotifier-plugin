@@ -187,7 +187,7 @@ void
 sni_toggle_play_pause (int play) {
     static int play_pause_state = 1;
     DbusmenuMenuitem *play_item;
-
+    
     if ((play_pause_state && play) || (!play_pause_state && !play))
         return;
 
@@ -346,6 +346,7 @@ sni_update_status (int state) {
         // Temporary hotfix - use sleep(1) in function callback_wait_notifier_register()
         
         int enable_overlay = deadbeef->conf_get_int("sni.animated",1);
+        
         switch (state) {
             case DDB_PLAYBACK_STATE_PLAYING:
                 if (enable_overlay)
@@ -427,14 +428,18 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
         break;
 
     case DB_EV_TRACKINFOCHANGED:
-        g_debug("Event: DB_EV_TRACKINFOCHANGED");
-        sni_update_tooltip (-1);
+        if (p1 == DDB_PLAYLIST_CHANGE_CONTENT) {
+            g_debug("Event: DB_EV_TRACKINFOCHANGED");
+            sni_update_tooltip (-1);
+        }
         break;
 
     case DB_EV_PAUSED:
         g_debug("Event: DB_EV_PAUSED");
-        sni_update_status (-1);
+        (p1) ? sni_update_status(DDB_PLAYBACK_STATE_PAUSED): 
+               sni_update_status(DDB_PLAYBACK_STATE_PLAYING);
         break;
+    
     case DB_EV_SONGCHANGED:
         {
             ddb_event_trackchange_t* ev_change = (ddb_event_trackchange_t*)ctx;
@@ -442,13 +447,18 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
                 g_debug("Event: DB_EV_SONGCHANGED");
                 sni_update_status (DDB_PLAYBACK_STATE_STOPPED);
             }
-            break;
         }
-    case DB_EV_STOP:
-        g_debug("Event: DB_EV_STOP");
-        sni_update_status (DDB_PLAYBACK_STATE_STOPPED);
         break;
-
+    
+    case DB_EV_SONGFINISHED:
+        {
+            ddb_event_track_t* T = (ddb_event_track_t*) ctx;
+            if (T->playtime > 0) {
+                g_debug("Event: DB_EV_SONGFINISHED");
+                sni_update_status (DDB_PLAYBACK_STATE_STOPPED);
+            }
+        }
+        break;
     case DB_EV_SONGSTARTED:
         g_debug("Event: DB_EV_SONGSTARTED");
         sni_update_status (DDB_PLAYBACK_STATE_PLAYING);
@@ -501,6 +511,7 @@ sni_disconnect () {
     }
     if (icon)
         g_object_unref(icon);
+
     return 0;
 }
 
