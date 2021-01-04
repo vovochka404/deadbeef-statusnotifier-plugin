@@ -381,9 +381,7 @@ sni_update_status (int state) {
 
 void
 deadbeef_toggle_play_pause (void) {
-        DB_output_t *output;
-
-    output = deadbeef->get_output ();
+    DB_output_t *output = deadbeef->get_output ();
     if (output) {
         switch (output->state ()) {
             case DDB_PLAYBACK_STATE_PLAYING:
@@ -450,15 +448,6 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
         }
         break;
     
-    case DB_EV_SONGFINISHED:
-        {
-            ddb_event_track_t* T = (ddb_event_track_t*) ctx;
-            if (T->playtime > 0) {
-                g_debug("Event: DB_EV_SONGFINISHED");
-                sni_update_status (DDB_PLAYBACK_STATE_STOPPED);
-            }
-        }
-        break;
     case DB_EV_SONGSTARTED:
         g_debug("Event: DB_EV_SONGSTARTED");
         sni_update_status (DDB_PLAYBACK_STATE_PLAYING);
