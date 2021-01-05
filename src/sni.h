@@ -73,5 +73,4 @@ gboolean deadbeef_preferences_available (void);
 
 void deadbeef_preferences_activate (void);
 
-
 #endif
