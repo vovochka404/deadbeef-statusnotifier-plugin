@@ -20,7 +20,7 @@
 
 #define TOOLTIP_MAX_LENGTH 1000
 
-void
+static void
 sni_update_tooltip (int state) {
     if (!icon)
         return;
@@ -132,7 +132,7 @@ sni_update_tooltip (int state) {
     }
 }
 
-void
+static void
 sni_update_status (int state) {
     g_debug("sni_update_status, status: %d", state);
     DB_output_t *output;

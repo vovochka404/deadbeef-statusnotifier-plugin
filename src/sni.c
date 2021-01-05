@@ -31,18 +31,21 @@ static StatusNotifier *icon = NULL;
 static DB_plugin_action_t *toggle_mainwindow_action = NULL;
 static DB_plugin_action_t *preferences_action = NULL;
 
-DB_functions_t *deadbeef = NULL;
+static DB_functions_t *deadbeef = NULL;
 static ddb_gtkui_t *gtkui_plugin;
 static DB_misc_t plugin;
-
-void sni_update_status ();
 
 DB_functions_t *
 deadbeef_get_instance (void) {
     return deadbeef;
 }
 
-void
+static void
+sni_toggle_play_pause (int play); // forward initialization
+
+#include "sni_upd.c"
+
+static void
 on_activate_requested (void) {
     if (toggle_mainwindow_action && 0) {
         toggle_mainwindow_action->callback2 (toggle_mainwindow_action, -1);
@@ -71,12 +74,12 @@ on_activate_requested (void) {
     }
 }
 
-void
+static void
 on_sec_activate_requested (void) {
     deadbeef_toggle_play_pause ();
 }
 
-void
+static void
 on_scroll_requested (StatusNotifier *sn,
                      int diff,
                      StatusNotifierScrollOrientation direction)
@@ -138,7 +141,7 @@ callback_wait_notifier_register (void* ctx) {
                             "%s: %s\n","Status notifier register failed (by timeout)", status_notifier_get_id(sni_ctx));
 }
 
-void
+static void
 sni_enable (int enable) {
     if ((icon && enable) || (!icon && !enable))
         return;
@@ -163,7 +166,7 @@ sni_enable (int enable) {
 }
 
 
-void
+static void
 sni_toggle_play_pause (int play) {
     static int play_pause_state = 1;
     DbusmenuMenuitem *play_item;
@@ -187,8 +190,6 @@ sni_toggle_play_pause (int play) {
     }
 }
 
-#include "sni_upd.c"
-
 ///////////////////////////////////
 // Common deadbeef plugin stuff
 ///////////////////////////////////
@@ -199,11 +200,11 @@ deadbeef_toggle_play_pause (void) {
     if (output) {
         switch (output->state ()) {
             case DDB_PLAYBACK_STATE_PLAYING:
-                deadbeef->sendmessage (DB_EV_TOGGLE_PAUSE, 0, 0, 0);
-                return;
             case DDB_PLAYBACK_STATE_PAUSED:
                 deadbeef->sendmessage (DB_EV_TOGGLE_PAUSE, 0, 0, 0);
                 return;
+            case DDB_PLAYBACK_STATE_STOPPED:
+                break;
         }
     }
     deadbeef->sendmessage (DB_EV_PLAY_CURRENT, 0, 0, 0);
@@ -219,7 +220,7 @@ deadbeef_preferences_activate (void) {
     preferences_action->callback2 (preferences_action, 0);
 }
 
-void
+static void
 sni_configchanged (void) {
     int enabled = deadbeef->conf_get_int ("sni.enabled", 1);
     int check_std_icon = deadbeef->conf_get_int ("sni.check_std_icon", 1);
@@ -270,7 +271,7 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     return 0;
 }
 
-int
+static int
 sni_connect () {
     gtkui_plugin = (ddb_gtkui_t *)deadbeef->plug_get_for_id (DDB_GTKUI_PLUGIN_ID);
     if (!gtkui_plugin) {
@@ -307,7 +308,7 @@ sni_connect () {
     return 0;
 }
 
-int
+static int
 sni_disconnect () {
     if (auto_activated) {
         deadbeef->conf_set_int ("gtkui.hide_tray_icon", 0);

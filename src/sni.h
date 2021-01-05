@@ -26,13 +26,10 @@
 #if ENABLE_NLS
 
 #include <libintl.h>
-#define PACKAGE "deadbeef"
-#define _(String) dgettext(PACKAGE, String)
-
+    #define PACKAGE "deadbeef"
+    #define _(String) dgettext(PACKAGE, String)
 #else
-
-#define _(String) (String)
-
+    #define _(String) (String)
 #endif
 
 #include <gtk/gtk.h>

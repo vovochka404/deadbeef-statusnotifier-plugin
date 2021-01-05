@@ -8,6 +8,3 @@ _build
 *.so
 *.swp
 enums.[c,h]
-.ninja_deps
-.ninja_log
-*.ninja
