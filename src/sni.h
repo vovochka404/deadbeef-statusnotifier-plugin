@@ -32,6 +32,13 @@
     #define _(String) (String)
 #endif
 
+#if defined(__GNUC__) || __has_attribute(visibility)
+    #define SNI_EXPORT_FUNC __attribute__((visibility("default")))
+#else
+    #define SNI_EXPORT_FUNC
+#endif
+
+
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/menuitem.h>
 

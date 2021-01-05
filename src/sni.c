@@ -375,12 +375,12 @@ static DB_misc_t plugin = {
     .plugin.disconnect = sni_disconnect,
 };
 
-DB_plugin_t *
+SNI_EXPORT_FUNC DB_plugin_t *
 #if GTK_CHECK_VERSION (3 ,0, 0)
-sni_gtk3_load (DB_functions_t *api) {
+    sni_gtk3_load (DB_functions_t *api) {
 #else
-sni_gtk2_load (DB_functions_t *api) {
+    sni_gtk2_load (DB_functions_t *api) {
 #endif
-    deadbeef = api;
-    return DB_PLUGIN (&plugin);
+        deadbeef = api;
+        return DB_PLUGIN (&plugin);
 }

@@ -1,6 +1,8 @@
 pkg_cflags  ?= $(shell pkg-config --cflags $(1))
 pkg_ldflags ?= $(shell pkg-config --libs $(1))
 
+CC ?= gcc
+
 PATH_SRC     = src
 PATH_EXTRA   = extras/statusnotifier/src
 PATH_BUILD  ?= build
@@ -29,7 +31,7 @@ LIST_CLEAN = CMakeCache.txt         \
 SNI_DEFS += -DUSE_DBUSMENU -DENABLE_NLS -DG_LOG_DOMAIN=\"plugin-sni\"
 SNI_DEPS += dbusmenu-glib-0.4 x11 
 
-CFLAGS   ?= -Wall -g -O2 -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused 
+CFLAGS   ?= -Wall -g -O2 -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -fvisibility=hidden
 CFLAGS   +=$(call pkg_cflags, $(SNI_DEPS))
 LDFLAGS  ?= -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections
 INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA))
