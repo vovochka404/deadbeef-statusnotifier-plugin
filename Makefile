@@ -3,8 +3,9 @@ pkg_ldflags ?= $(shell pkg-config --libs $(1))
 
 PATH_SRC     = src
 PATH_EXTRA   = extras/statusnotifier/src
-PATH_BUILD2 ?= _build/gtk2
-PATH_BUILD3 ?= _build/gtk3
+PATH_BUILD  ?= build
+PATH_BUILD2 ?= $(PATH_BUILD)/gtk2
+PATH_BUILD3 ?= $(PATH_BUILD)/gtk3
 
 OUT_GTK2 ?= sni_gtk2.so
 OUT_GTK3 ?= sni_gtk3.so
@@ -64,8 +65,8 @@ enums.c: $(PATH_EXTRA)/enums.c.template $(PATH_EXTRA)/statusnotifier.h
 clean:
 	@rm -rf $(LIST_CLEAN)
 
-gtk3: mkdirs_gtk3 mkenums $(OUT_GTK3)
-gtk2: mkdirs_gtk2 mkenums $(OUT_GTK2)
+gtk3: mkdirs_gtk3 mkenums $(PATH_BUILD)/$(OUT_GTK3)
+gtk2: mkdirs_gtk2 mkenums $(PATH_BUILD)/$(OUT_GTK2)
 
 mkdirs_gtk3:
 	@mkdir -p $(abspath $(PATH_BUILD3)/$(PATH_SRC))
@@ -76,13 +77,13 @@ mkdirs_gtk2:
 
 ## BUILD TARGETS
 
-$(OUT_GTK3): $(OBJ_GTK3)
+$(PATH_BUILD)/$(OUT_GTK3): $(OBJ_GTK3)
 	@$(call link, $(call pkg_ldflags, $(GTK3)) $(call pkg_ldflags, $(SNI_DEPS)))
 
 $(PATH_BUILD3)/%.o: $(SNI_SRC)
 	@$(call compile, $(call pkg_cflags, $(GTK3)), $(filter %$(@F:%.o=%.c), $^))
 
-$(OUT_GTK2): $(OBJ_GTK2)
+$(PATH_BUILD)/$(OUT_GTK2): $(OBJ_GTK2)
 	@$(call link, $(call pkg_ldflags, $(GTK2)) $(call pkg_ldflags, $(SNI_DEPS)))
 
 $(PATH_BUILD2)/%.o: $(SNI_SRC)
