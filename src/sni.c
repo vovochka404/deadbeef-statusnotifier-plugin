@@ -104,8 +104,7 @@ on_scroll_requested (StatusNotifier *sn,
     }
     if (vol > 0) {
         vol = 0;
-    }
-    else if (vol < deadbeef->volume_get_min_db ()) {
+    } else if (vol < deadbeef->volume_get_min_db ()) {
         vol = deadbeef->volume_get_min_db ();
     }
 

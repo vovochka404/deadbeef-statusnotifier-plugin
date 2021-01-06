@@ -1,6 +1,6 @@
 #include "sni.h"
 
-#define TOOLTIP_FORMAT "%s"\
+#define TOOLTIP_FORMAT "<b>[%s]</b><br/>"\
         "<b>Title:</b> %s<br/>"\
         "<b>Artist:</b> %s<br/>"\
         "<b>Album:</b> %s%s%s%s"
@@ -34,7 +34,7 @@ get_track_artist (DB_playItem_t* track) {
     return artist;
 }
 
-static size_t
+static void
 sni_get_tooltip (DB_playItem_t *track,
                  int state,
                  const gchar *fmt,
@@ -48,36 +48,31 @@ sni_get_tooltip (DB_playItem_t *track,
     gchar *escaped_album  = GME_TEXT(get_track_info(track, "album"));
     gchar *escaped_date   = GME_TEXT(get_track_info(track, "year"));
 
-    size_t ret = g_snprintf (buf, sz, fmt,
-                            (state == OUTPUT_STATE_PAUSED) ? _("Playback paused"):
-                                                             _("Playback played"),
-                            escaped_title   ? escaped_title  : ns,
-                            escaped_artist  ? escaped_artist : ns,
-                            escaped_album   ? escaped_album  : ns,
-                            escaped_date    ? " ["           : "",
-                            escaped_date    ? escaped_date   : "",
-                            escaped_date    ? "]"            : "");
+    g_snprintf (buf, sz, fmt,
+                (state == OUTPUT_STATE_PAUSED) ? _("Playback paused"):
+                                                 _("Playback played"),
+                escaped_title   ? escaped_title  : ns,
+                escaped_artist  ? escaped_artist : ns,
+                escaped_album   ? escaped_album  : ns,
+                escaped_date    ? " ["           : "",
+                escaped_date    ? escaped_date   : "",
+                escaped_date    ? "]"            : "");
 
     g_free (escaped_title);
     g_free (escaped_artist);
     g_free (escaped_album);
     g_free (escaped_date);
-
-    return ret;
 }
 
 static inline GdkPixbuf*
 sni_get_coverart(DB_playItem_t* track) {
     const char *artist = get_track_artist(track);
     const char *album  = get_track_info(track, "album");
-
-    g_debug("Going to query coverart");
 #if (DDB_GTKUI_API_LEVEL >= 202)
     GdkPixbuf * buf = gtkui_plugin->get_cover_art_primary (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
 #else
     GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf  (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
 #endif
-    g_debug("Got GdbPixbuf: %zu", (uintptr_t) buf);
     if (buf == NULL)
         buf = gtkui_plugin->cover_get_default_pixbuf ();
 
@@ -97,14 +92,15 @@ sni_set_tooltip_html (DB_playItem_t *track,
                       int state) {
     gchar title_body[TOOLTIP_MAX_LENGTH];
 
-    if (sni_get_tooltip (track, state, _(TOOLTIP_FORMAT), title_body, TOOLTIP_MAX_LENGTH) > 0) {
-        GdkPixbuf *pic = sni_get_coverart(track);
-        (pic) ? status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic) :
-                status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");
-    }
+    sni_get_tooltip (track, state, _(TOOLTIP_FORMAT), title_body, TOOLTIP_MAX_LENGTH);
+    GdkPixbuf *pic = sni_get_coverart(track);
+    (pic) ? status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic) :
+            status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");
 
     status_notifier_set_tooltip_body (icon, title_body);
 }
+
+/* === main update functions === */
 
 static void
 sni_update_tooltip (int state) {
