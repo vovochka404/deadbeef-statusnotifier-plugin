@@ -119,7 +119,6 @@ callback_wait_notifier_register (void* ctx) {
     for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
-            sleep(1);
             sni_loaded = TRUE;
             sni_update_status(-1);
             deadbeef->log_detailed((DB_plugin_t*)(&plugin), DDB_LOG_LAYER_INFO,

@@ -31,10 +31,28 @@
         "\nArtist: %s"\
         "\nAlbum: %s%s%s%s"
 
+#define STATE_WAITING_CYCLE 10000
 #define TOOLTIP_MAX_LENGTH 1000
 
 #define GME_TEXT(X) \
     (X) ? g_markup_escape_text ((X), -1) : NULL
+
+/* This function is necessary because at the time of the call,
+   the output may be uninitialized and a data race will occur */
+
+static inline int
+playback_state_active_waiting (void) {
+    DB_output_t* out = deadbeef->get_output();
+    if (out) {
+        ddb_playback_state_t state = 0;
+        for (;;) {
+            state = out->state();
+            if ((state >= 0) && (state <= DDB_PLAYBACK_STATE_PAUSED))
+                return state;
+        }
+    }
+    return -1;
+}
 
 static inline const char*
 get_track_info (DB_playItem_t* track,
@@ -129,18 +147,16 @@ static void
 sni_update_tooltip (int state) {
     if (!icon)
         return;
+    if (sni_loaded == FALSE)
+        return;
     if (deadbeef->conf_get_int("sni.enable_tooltip", 0) == 0)
         return;
 
     g_debug("sni_update_tooltip, status: %d", state);
-    DB_output_t *output;
-    output = deadbeef->get_output ();
 
-    if (output) {
-        if (state < 0)
-            state = output->state ();
-
-        switch (state) {
+    int out_state = (state < 0) ? playback_state_active_waiting() : state;
+    if (out_state >= 0) {
+        switch (out_state) {
             case DDB_PLAYBACK_STATE_STOPPED:
                 status_notifier_set_tooltip (icon, "deadbeef", "DeaDBeeF", _("Playback stopped"));
                 break;
@@ -153,8 +169,8 @@ sni_update_tooltip (int state) {
                     break;
                 }
                 deadbeef->conf_get_int("sni.tooltip_plain_text", 0) ?
-                    sni_set_tooltip_textonly (track, state):
-                    sni_set_tooltip_html (track, state);
+                    sni_set_tooltip_textonly (track, out_state):
+                    sni_set_tooltip_html (track, out_state);
 
 
                 deadbeef->pl_item_unref (track);
@@ -170,7 +186,6 @@ sni_update_tooltip (int state) {
 static void
 sni_update_status (int state) {
     g_debug("sni_update_status, status: %d", state);
-    DB_output_t *output;
     DbusmenuMenuitem *stop_item;
 
     if (!icon)
@@ -178,18 +193,12 @@ sni_update_status (int state) {
     if (sni_loaded == FALSE)
         return;
 
-    output = deadbeef->get_output ();
+    int out_state = (state < 0) ? playback_state_active_waiting() : state;
 
-    if (output) {
-        if (state < 0)
-            state = output->state ();
-
-        // FIXME Data race. Output maybe not initialized and returned invalid state value.
-        // Temporary hotfix - use sleep(1) in function callback_wait_notifier_register()
+    if (out_state >= 0) {
 
         int enable_overlay = deadbeef->conf_get_int("sni.animated",1);
-
-        switch (state) {
+        switch (out_state) {
             case DDB_PLAYBACK_STATE_PLAYING:
                 if (enable_overlay)
                     status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-start");
@@ -213,5 +222,5 @@ sni_update_status (int state) {
                 break;
         }
     }
-    sni_update_tooltip (state);
+    sni_update_tooltip (out_state);
 }
