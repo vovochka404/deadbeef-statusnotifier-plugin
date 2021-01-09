@@ -1,3 +1,25 @@
+/*
+ * deadbeef-statusnotifier-plugin - Copyright (C) 2015 Vladimir Perepechin
+ *
+ * sni_upd.c
+ * Copyright (C) 2014 Vladimir Perepechin <vovochka13@gmail.com>
+ *
+ * This file is part of deadbeef-statusnotifier-plugin.
+ *
+ * deadbeef-statusnotifier-plugin is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * deadbeef-statusnotifier-plugin is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * deadbeef-statusnotifier-plugin. If not, see http://www.gnu.org/licenses/
+ */
+
 #include "sni.h"
 
 #define TOOLTIP_FORMAT "<b>[%s]</b><br/>"\
@@ -174,12 +196,12 @@ sni_update_status (int state) {
                 stop_item = get_context_menu_item (SNI_MENU_ITEM_STOP);
                 dbusmenu_menuitem_property_set_bool (stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 
-                sni_toggle_play_pause (0);
+                sni_toggle_play_pause (SNI_STATE_TOOGLE_PLAY);
                 break;
             case DDB_PLAYBACK_STATE_PAUSED:
                 if (enable_overlay)
                     status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_OVERLAY_ICON, "media-playback-pause");
-                sni_toggle_play_pause (1);
+                sni_toggle_play_pause (SNI_STATE_TOOGLE_PAUSE);
                 break;
             case DDB_PLAYBACK_STATE_STOPPED:
                 if (enable_overlay)
@@ -187,7 +209,7 @@ sni_update_status (int state) {
                 stop_item = get_context_menu_item (SNI_MENU_ITEM_STOP);
                 dbusmenu_menuitem_property_set_bool (stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
 
-                sni_toggle_play_pause (1);
+                sni_toggle_play_pause (SNI_STATE_TOOGLE_PAUSE);
                 break;
         }
     }

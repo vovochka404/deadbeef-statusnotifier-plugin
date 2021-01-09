@@ -65,16 +65,22 @@ typedef enum {
 	SNI_MENU_ITEM_TYPE_SEPARATOR
 } SNIContextMenuItemType;
 
-DbusmenuMenuitem *get_context_menu (void);
+DbusmenuMenuitem *
+get_context_menu (void);
 
-DbusmenuMenuitem *get_context_menu_item (SNIContextMenuItem item);
+DbusmenuMenuitem *
+get_context_menu_item (SNIContextMenuItem item);
 
-void update_playback_controls (void);
+void
+update_playback_controls (void);
 
-void deadbeef_toggle_play_pause (void);
+void
+deadbeef_toggle_play_pause (void);
 
-gboolean deadbeef_preferences_available (void);
+gboolean
+deadbeef_preferences_available (void);
 
-void deadbeef_preferences_activate (void);
+void
+deadbeef_preferences_activate (void);
 
 #endif

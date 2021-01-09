@@ -85,6 +85,6 @@ void
 gdk_x11_window_force_focus (GdkWindow *window,
                             guint32    timestamp)
 {
-
+    /* Dummy function */
 }
 #endif

@@ -22,6 +22,11 @@
 
 #include "sni.h"
 
+enum {
+    SNI_STATE_TOOGLE_PLAY  = 0,
+    SNI_STATE_TOOGLE_PAUSE = 1,
+};
+
 static gboolean auto_activated = FALSE;
 static volatile gboolean sni_loaded = FALSE;
 
@@ -59,12 +64,9 @@ on_activate_requested (void) {
             gtk_widget_hide (mainwin);
         }
         else {
-            if (iconified) {
-                gtk_window_deiconify (GTK_WINDOW (mainwin));
-            }
-            else {
-                gtk_window_present (GTK_WINDOW (mainwin));
-            }
+            (iconified) ? gtk_window_deiconify (GTK_WINDOW (mainwin)) :
+                          gtk_window_present (GTK_WINDOW (mainwin));
+
             gtk_window_move(GTK_WINDOW (mainwin),
                             deadbeef->conf_get_int("mainwin.geometry.x", 0),
                             deadbeef->conf_get_int("mainwin.geometry.y", 0));
@@ -95,12 +97,7 @@ on_scroll_requested (StatusNotifier *sn,
     int sens = deadbeef->conf_get_int ("gtkui.tray_volume_sensitivity", 1);
 
     if (diff) {
-        if (diff > 0) {
-            vol += sens;
-        }
-        else {
-            vol -= sens;
-        }
+         vol = (diff > 0) ? vol + sens : vol - sens;
     }
     if (vol > 0) {
         vol = 0;
@@ -179,13 +176,13 @@ sni_toggle_play_pause (int play) {
         dbusmenu_menuitem_property_set (play_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Pause"));
         dbusmenu_menuitem_property_set (play_item, DBUSMENU_MENUITEM_PROP_ICON_NAME, "media-playback-pause");
 
-        play_pause_state = 0;
+        play_pause_state = SNI_STATE_TOOGLE_PLAY;
     }
     else {
         dbusmenu_menuitem_property_set (play_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Play"));
         dbusmenu_menuitem_property_set (play_item, DBUSMENU_MENUITEM_PROP_ICON_NAME, "media-playback-start");
 
-        play_pause_state = 1;
+        play_pause_state = SNI_STATE_TOOGLE_PAUSE;
     }
 }
 
