@@ -36,8 +36,7 @@ SET (SNI_SOURCE_DIR ${PROJECT_SOURCE_DIR}/extras/statusnotifier/src)
 
 AUX_SOURCE_DIRECTORY (${SNI_SOURCE_DIR} SNI_SRCS)
 SET (PLUGIN_SRCS ${PROJECT_SOURCE_DIR}/src/menu.c
-                 ${PROJECT_SOURCE_DIR}/src/sni.c
-                 ${PROJECT_SOURCE_DIR}/src/x11-force-focus.c)
+                 ${PROJECT_SOURCE_DIR}/src/sni.c)
 
 PKG_CHECK_MODULES (DBUSMENU_GLIB REQUIRED dbusmenu-glib-0.4)
 PKG_CHECK_MODULES (X11 x11)

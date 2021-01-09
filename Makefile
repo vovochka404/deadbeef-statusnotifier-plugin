@@ -39,7 +39,7 @@ INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA
 GTK2 = gtk+-2.0
 GTK3 = gtk+-3.0
 
-SNI_SRC_LIST = menu.c sni.c x11-force-focus.c
+SNI_SRC_LIST = menu.c sni.c
 SNI_EXT_LIST = statusnotifier.c closures.c
 SNI_SRC = enums.c $(addprefix $(PATH_SRC)/,$(SNI_SRC_LIST)) $(addprefix $(PATH_EXTRA)/,$(SNI_EXT_LIST))
 OBJ_GTK2 = $(patsubst %.c, $(PATH_BUILD2)/%.o, $(SNI_SRC))

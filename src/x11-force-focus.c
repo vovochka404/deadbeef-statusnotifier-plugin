@@ -20,7 +20,7 @@
  * deadbeef-statusnotifier-plugin. If not, see http://www.gnu.org/licenses/
  */
 
-#include "x11-force-focus.h"
+#include <gtk/gtk.h>
 
 #if !GTK_CHECK_VERSION(3,0,0) || defined(GDK_WINDOWING_X11)
 
@@ -85,6 +85,6 @@ void
 gdk_x11_window_force_focus (GdkWindow *window,
                             guint32    timestamp)
 {
-    
+
 }
 #endif

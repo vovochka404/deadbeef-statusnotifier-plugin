@@ -21,7 +21,6 @@
  */
 
 #include "sni.h"
-#include "x11-force-focus.h"
 
 static gboolean auto_activated = FALSE;
 static volatile gboolean sni_loaded = FALSE;
@@ -44,6 +43,7 @@ static void
 sni_toggle_play_pause (int play); // forward initialization
 
 #include "sni_upd.c"
+#include "x11-force-focus.c"
 
 static void
 on_activate_requested (void) {
