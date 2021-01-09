@@ -68,7 +68,7 @@ on_activate_requested (void) {
             gtk_window_move(GTK_WINDOW (mainwin),
                             deadbeef->conf_get_int("mainwin.geometry.x", 0),
                             deadbeef->conf_get_int("mainwin.geometry.y", 0));
-            
+
             gdk_x11_window_force_focus (gdk_window, 0);
         }
     }
@@ -87,13 +87,13 @@ on_scroll_requested (StatusNotifier *sn,
     if (deadbeef->conf_get_int("sni.volume_hdirect_ignore", 1))
         if (direction == STATUS_NOTIFIER_SCROLL_ORIENTATION_HORIZONTAL)
             return;
-    
+
     if (deadbeef->conf_get_int("sni.volume_reverse", 0))
         diff *= -1;
 
     float vol = deadbeef->volume_get_db ();
     int sens = deadbeef->conf_get_int ("gtkui.tray_volume_sensitivity", 1);
-    
+
     if (diff) {
         if (diff > 0) {
             vol += sens;
@@ -111,13 +111,13 @@ on_scroll_requested (StatusNotifier *sn,
     deadbeef->volume_set_db (vol);
 }
 
-static void 
+static void
 callback_wait_notifier_register (void* ctx) {
     StatusNotifierState state = STATUS_NOTIFIER_STATE_NOT_REGISTERED;
     StatusNotifier* sni_ctx = (StatusNotifier*)ctx;
 
     status_notifier_register (sni_ctx);
-    
+
     uint32_t wait_time = deadbeef->conf_get_int("sni.waiting_sec", 60);
     for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
@@ -154,7 +154,7 @@ sni_enable (int enable) {
         g_signal_connect (icon, "activate", (GCallback) on_activate_requested, NULL);
         g_signal_connect (icon, "secondary-activate", (GCallback) on_sec_activate_requested, NULL);
         g_signal_connect (icon, "scroll", (GCallback) on_scroll_requested, NULL);
-        
+
         // Waiting notifier register process in separate thread
         deadbeef->thread_start(callback_wait_notifier_register, (void*)icon);
     }
@@ -169,7 +169,7 @@ static void
 sni_toggle_play_pause (int play) {
     static int play_pause_state = 1;
     DbusmenuMenuitem *play_item;
-    
+
     if ((play_pause_state && play) || (!play_pause_state && !play))
         return;
 
@@ -248,10 +248,10 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
 
     case DB_EV_PAUSED:
         g_debug("Event: DB_EV_PAUSED");
-        (p1) ? sni_update_status(DDB_PLAYBACK_STATE_PAUSED): 
+        (p1) ? sni_update_status(DDB_PLAYBACK_STATE_PAUSED):
                sni_update_status(DDB_PLAYBACK_STATE_PLAYING);
         break;
-    
+
     case DB_EV_SONGCHANGED:
         {
             ddb_event_trackchange_t* ev_change = (ddb_event_trackchange_t*)ctx;
@@ -261,7 +261,7 @@ sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
             }
         }
         break;
-    
+
     case DB_EV_SONGSTARTED:
         g_debug("Event: DB_EV_SONGSTARTED");
         sni_update_status (DDB_PLAYBACK_STATE_PLAYING);
@@ -327,7 +327,8 @@ static const char settings_dlg[] =
     "property \"Use animated icon (SNI overlay enable)\" checkbox sni.animated 1;\n"
     "property \"Enable SNI tooltip\" checkbox sni.enable_tooltip 1;\n"
     "property \"Use plain text tooltip (if tooltip enabled)\" checkbox sni.tooltip_plain_text 0;\n"
-    
+    "property \"Set tooltip icon (if possible)\" checkbox sni.tooltip_enable_icon 1;\n"
+
     "property \"Volume control horizontal scroll ignore\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
 
@@ -351,7 +352,7 @@ static DB_misc_t plugin = {
 #endif
     .plugin.descr = "StatusNotifierItem for DE without support for xembedded icons\n"
     "(like plasma5). It also can be used for a better look&feel experience.\n",
-    .plugin.copyright = 
+    .plugin.copyright =
         "StatusNotifier plugin for DeaDBeeF Player\n"
         "Copyright (C) 2015 Vladimir Perepechin <vovochka13@gmail.com>\n"
         "\n"

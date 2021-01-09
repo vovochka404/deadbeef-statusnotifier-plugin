@@ -93,10 +93,11 @@ sni_set_tooltip_html (DB_playItem_t *track,
     gchar title_body[TOOLTIP_MAX_LENGTH];
 
     sni_get_tooltip (track, state, _(TOOLTIP_FORMAT), title_body, TOOLTIP_MAX_LENGTH);
-    GdkPixbuf *pic = sni_get_coverart(track);
-    (pic) ? status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic) :
-            status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");
-
+    if (deadbeef->conf_get_int("sni.tooltip_enable_icon",1)) {
+        GdkPixbuf *pic = sni_get_coverart(track);
+        (pic) ? status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic) :
+                status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");
+    }
     status_notifier_set_tooltip_body (icon, title_body);
 }
 
