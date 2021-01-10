@@ -314,16 +314,16 @@ sni_disconnect () {
 
 
 static const char settings_dlg[] =
-    "property \"Enable StatusNotifierItem\" checkbox sni.enabled 1;\n"
+    "property \"Enable Status Notifier\" checkbox sni.enabled 1;\n"
     "property \"Allow only if standart GUI tray icon is disabled\" checkbox sni.check_std_icon 1;\n"
     "property \"Automaticly disable standart GUI tray icon\" checkbox sni.enable_automaticaly 1;\n"
 
-    "property \"Use animated icon (SNI overlay enable)\" checkbox sni.animated 1;\n"
-    "property \"Enable SNI tooltip\" checkbox sni.enable_tooltip 1;\n"
-    "property \"Use plain text tooltip (if tooltip enabled)\" checkbox sni.tooltip_plain_text 0;\n"
-    "property \"Set tooltip icon (if possible)\" checkbox sni.tooltip_enable_icon 1;\n"
+    "property \"Display playback status on icon (if DE support overlay icons)\" checkbox sni.enable_overlay 1;\n"
+    "property \"Display Status Notifier tooltip (if DE support this)\" checkbox sni.enable_tooltip 1;\n"
+    "property \"Use plain text tooltip (if DE not support HTML tooltips)\" checkbox sni.tooltip_plain_text 0;\n"
+    "property \"Set tooltip icon (if DE support this)\" checkbox sni.tooltip_enable_icon 1;\n"
 
-    "property \"Volume control horizontal scroll ignore\" checkbox sni.volume_hdirect_ignore 1;\n"
+    "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
 
     "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_sec 60;\n"
@@ -339,13 +339,13 @@ static DB_misc_t plugin = {
     .plugin.version_minor = 3,
 #if GTK_CHECK_VERSION (3, 0, 0)
     .plugin.id = "sni_gtk3",
-    .plugin.name = "StatusNotifierItem for GTK3 UI",
+    .plugin.name = "Status Notifier for GTK3 UI",
 #else
     .plugin.id = "sni_gtk2",
-    .plugin.name = "StatusNotifierItem for GTK2 UI",
+    .plugin.name = "Status Notifier for GTK2 UI",
 #endif
     .plugin.descr = "StatusNotifierItem for DE without support for xembedded icons\n"
-    "(like plasma5). It also can be used for a better look&feel experience.\n",
+    "(like plasma5 or GNOME3). It also can be used for a better look&feel experience.\n",
     .plugin.copyright =
         "StatusNotifier plugin for DeaDBeeF Player\n"
         "Copyright (C) 2015 Vladimir Perepechin <vovochka13@gmail.com>\n"

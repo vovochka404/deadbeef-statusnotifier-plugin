@@ -199,7 +199,7 @@ sni_update_status (int state) {
 
     if (out_state >= 0) {
 
-        int enable_overlay = deadbeef->conf_get_int("sni.animated",1);
+        int enable_overlay = deadbeef->conf_get_int("sni.enable_overlay",1);
         switch (out_state) {
             case DDB_PLAYBACK_STATE_PLAYING:
                 if (enable_overlay)

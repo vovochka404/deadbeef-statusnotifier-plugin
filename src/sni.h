@@ -68,7 +68,6 @@ typedef enum {
 typedef enum {
     SNI_FLAG_AUTOED = 1 << 0,
     SNI_FLAG_LOADED = 1 << 1,
-    SNI_FLAG_PLAYED = 1 << 2
 } SNIFlags;
 
 DbusmenuMenuitem *
