@@ -29,9 +29,9 @@ LIST_CLEAN = CMakeCache.txt         \
 			 *.ninja
 
 SNI_DEFS += -DUSE_DBUSMENU -DENABLE_NLS -DG_LOG_DOMAIN=\"plugin-sni\"
-SNI_DEPS += dbusmenu-glib-0.4 x11 
+SNI_DEPS += dbusmenu-glib-0.4 x11
 
-CFLAGS   ?= -Wall -Wextra -g -O2 -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -fvisibility=hidden
+CFLAGS   ?= -Wall -Wextra -g -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -O2 -fvisibility=hidden
 CFLAGS   +=$(call pkg_cflags, $(SNI_DEPS))
 LDFLAGS  ?= -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections
 INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA))
@@ -47,17 +47,17 @@ OBJ_GTK3 = $(patsubst %.c, $(PATH_BUILD3)/%.o, $(SNI_SRC))
 
 ### FUNCTIONS
 define compile
-    $(CC) $(CFLAGS) $(SNI_DEFS) $(INCLUDES) $1 $(abspath $2) -c -o $(abspath $@) 
+    $(CC) $(CFLAGS) $(SNI_DEFS) $(INCLUDES) $1 $(abspath $2) -c -o $(abspath $@)
 endef
 define link
-    $(CC) $(LDFLAGS) $(abspath $^) $1 -o $(abspath $@) 
+    $(CC) $(LDFLAGS) $(abspath $^) $1 -o $(abspath $@)
 endef
 
 ### TARGETS
 
 all: gtk3 gtk2
 
-mkenums: enums.c enums.h 
+mkenums: enums.c enums.h
 enums.h: $(PATH_EXTRA)/enums.h.template $(PATH_EXTRA)/statusnotifier.h
 	@$(APP_GLIB_MKENUMS) --template $^ > $@
 enums.c: $(PATH_EXTRA)/enums.c.template $(PATH_EXTRA)/statusnotifier.h
