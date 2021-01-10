@@ -27,9 +27,6 @@ enum {
     SNI_STATE_TOOGLE_PAUSE = 1,
 };
 
-static gboolean auto_activated = FALSE;
-static volatile gboolean sni_loaded = FALSE;
-
 static StatusNotifier *icon = NULL;
 
 static DB_plugin_action_t *toggle_mainwindow_action = NULL;
@@ -47,6 +44,7 @@ deadbeef_get_instance (void) {
 static void
 sni_toggle_play_pause (int play); // forward initialization
 
+#include "sni_flags.c"
 #include "sni_upd.c"
 #include "x11-force-focus.c"
 
@@ -119,7 +117,7 @@ callback_wait_notifier_register (void* ctx) {
     for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
-            sni_loaded = TRUE;
+            sni_flag_set(SNI_FLAG_LOADED);
             sni_update_status(-1);
             deadbeef->log_detailed((DB_plugin_t*)(&plugin), DDB_LOG_LAYER_INFO,
                                     "%s: %s\n","Status notifier register success", status_notifier_get_id(sni_ctx));
@@ -227,7 +225,7 @@ static int
 sni_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     switch (id) {
     case DB_EV_TERMINATE:
-        sni_loaded = FALSE;
+        sni_flag_unset(SNI_FLAG_LOADED);
         break;
     case DB_EV_CONFIGCHANGED:
         g_debug("Event: DB_EV_CONFIGCHANGED");
@@ -294,7 +292,7 @@ sni_connect () {
     int hide_tray_icon = deadbeef->conf_get_int ("gtkui.hide_tray_icon", 0);
 
     if (enabled && enable_automaticaly && !hide_tray_icon) {
-        auto_activated = TRUE;
+        sni_flag_set(SNI_FLAG_AUTOED);
         deadbeef->conf_set_int ("gtkui.hide_tray_icon", 1);
     }
     else
@@ -305,7 +303,7 @@ sni_connect () {
 
 static int
 sni_disconnect () {
-    if (auto_activated) {
+    if (sni_flag_get(SNI_FLAG_AUTOED)) {
         deadbeef->conf_set_int ("gtkui.hide_tray_icon", 0);
     }
     if (icon)

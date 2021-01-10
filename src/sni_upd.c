@@ -145,9 +145,10 @@ sni_set_tooltip_html (DB_playItem_t *track,
 
 static void
 sni_update_tooltip (int state) {
-    if (!icon)
+
+    if (sni_flag_get(SNI_FLAG_LOADED) == FALSE)
         return;
-    if (sni_loaded == FALSE)
+    if (!icon)
         return;
     if (deadbeef->conf_get_int("sni.enable_tooltip", 0) == 0)
         return;
@@ -185,13 +186,14 @@ sni_update_tooltip (int state) {
 
 static void
 sni_update_status (int state) {
-    g_debug("sni_update_status, status: %d", state);
-    DbusmenuMenuitem *stop_item;
 
+    if (sni_flag_get(SNI_FLAG_LOADED) == FALSE)
+        return;
     if (!icon)
         return;
-    if (sni_loaded == FALSE)
-        return;
+
+    g_debug("sni_update_status, status: %d", state);
+    DbusmenuMenuitem *stop_item;
 
     int out_state = (state < 0) ? playback_state_active_waiting() : state;
 
