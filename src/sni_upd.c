@@ -101,12 +101,16 @@ sni_get_tooltip (DB_playItem_t *track,
 
 static inline GdkPixbuf*
 sni_get_coverart(DB_playItem_t* track) {
+    const char *uri = get_track_info(track, ":URI");
     const char *artist = get_track_artist(track);
     const char *album  = get_track_info(track, "album");
+    if (!album || !*album) {
+        album = get_track_info(track, "title");
+    }
 #if (DDB_GTKUI_API_LEVEL >= 202)
-    GdkPixbuf * buf = gtkui_plugin->get_cover_art_primary (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
+    GdkPixbuf * buf = gtkui_plugin->get_cover_art_primary (uri, artist, album, 128, NULL, NULL);
 #else
-    GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf  (deadbeef->pl_find_meta (track, ":URI"), artist, album, 128, NULL, NULL);
+    GdkPixbuf * buf = gtkui_plugin->get_cover_art_pixbuf (uri, artist, album, 128, NULL, NULL);
 #endif
     if (buf == NULL)
         buf = gtkui_plugin->cover_get_default_pixbuf ();
@@ -130,8 +134,11 @@ sni_set_tooltip_html (DB_playItem_t *track,
     sni_get_tooltip (track, state, _(TOOLTIP_FORMAT), title_body, TOOLTIP_MAX_LENGTH);
     if (deadbeef->conf_get_int("sni.tooltip_enable_icon",1)) {
         GdkPixbuf *pic = sni_get_coverart(track);
-        (pic) ? status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic) :
-                status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");
+        if (pic) {
+            status_notifier_set_from_pixbuf (icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic);
+            g_object_unref(pic);
+        } else {
+            status_notifier_set_from_icon_name (icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");}
     }
     status_notifier_set_tooltip_body (icon, title_body);
 }
@@ -190,7 +197,6 @@ sni_update_status (int state) {
     DbusmenuMenuitem *stop_item;
 
     int out_state = (state < 0) ? playback_state_active_waiting() : state;
-
     if (out_state >= 0) {
 
         int enable_overlay = deadbeef->conf_get_int("sni.enable_overlay",1);

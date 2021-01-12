@@ -161,7 +161,7 @@ sni_enable (int enable) {
 
 static void
 sni_toggle_play_pause (int play) {
-    static int play_pause_state = 1;
+    static int play_pause_state = SNI_STATE_TOOGLE_PAUSE;
     DbusmenuMenuitem *play_item;
 
     if ((play_pause_state && play) || (!play_pause_state && !play))
