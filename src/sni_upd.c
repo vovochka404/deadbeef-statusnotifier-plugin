@@ -62,15 +62,11 @@ get_track_info (DB_playItem_t* track,
 
 static inline const char*
 get_track_artist (DB_playItem_t* track) {
-    const char *artist = deadbeef->pl_find_meta (track, "artist");
-    if (artist == NULL) {
-        artist = deadbeef->pl_find_meta (track, "albumartist");
-        if (artist == NULL) {
-            artist = deadbeef->pl_find_meta (track, "album artist");
-            if (artist == NULL)
-                artist = deadbeef->pl_find_meta (track, "band");
-        }
-    }
+    const char *artist = NULL;
+    if ((artist = get_track_info (track, "artist")) == NULL)
+        if ((artist = get_track_info (track, "albumartist")) == NULL)
+            if ((artist = get_track_info (track, "album artist")) == NULL)
+                artist = get_track_info (track, "band");
     return artist;
 }
 
@@ -79,8 +75,7 @@ sni_get_tooltip (DB_playItem_t *track,
                  int state,
                  const gchar *fmt,
                  gchar *buf,
-                 size_t sz)
-{
+                 size_t sz) {
     const gchar *ns = _("not specified");
 
     gchar *escaped_artist = GME_TEXT(get_track_artist(track));
@@ -165,16 +160,15 @@ sni_update_tooltip (int state) {
             case DDB_PLAYBACK_STATE_PLAYING:
             {
                 DB_playItem_t *track = deadbeef->streamer_get_playing_track ();
-                if (!track) {
+                if (track) {
+                    deadbeef->conf_get_int("sni.tooltip_plain_text", 0) ?
+                        sni_set_tooltip_textonly (track, out_state):
+                        sni_set_tooltip_html (track, out_state);
+
+                    deadbeef->pl_item_unref (track);
+                } else {
                     status_notifier_set_tooltip (icon, "deadbeef", "DeaDBeeF", _("Playing"));
-                    break;
                 }
-                deadbeef->conf_get_int("sni.tooltip_plain_text", 0) ?
-                    sni_set_tooltip_textonly (track, out_state):
-                    sni_set_tooltip_html (track, out_state);
-
-
-                deadbeef->pl_item_unref (track);
                 break;
             }
         }
