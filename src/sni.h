@@ -26,14 +26,18 @@
 #if ENABLE_NLS
 
 #include <libintl.h>
-#define PACKAGE "deadbeef"
-#define _(String) dgettext(PACKAGE, String)
-
+    #define PACKAGE "deadbeef"
+    #define _(String) dgettext(PACKAGE, String)
 #else
-
-#define _(String) (String)
-
+    #define _(String) (String)
 #endif
+
+#if defined(__GNUC__) || __has_attribute(visibility)
+    #define SNI_EXPORT_FUNC __attribute__((visibility("default")))
+#else
+    #define SNI_EXPORT_FUNC
+#endif
+
 
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/menuitem.h>
@@ -61,17 +65,27 @@ typedef enum {
 	SNI_MENU_ITEM_TYPE_SEPARATOR
 } SNIContextMenuItemType;
 
-DbusmenuMenuitem *get_context_menu (void);
+typedef enum {
+    SNI_FLAG_AUTOED = 1 << 0,
+    SNI_FLAG_LOADED = 1 << 1,
+} SNIFlags;
 
-DbusmenuMenuitem *get_context_menu_item (SNIContextMenuItem item);
+DbusmenuMenuitem *
+get_context_menu (void);
 
-void update_playback_controls (void);
+DbusmenuMenuitem *
+get_context_menu_item (SNIContextMenuItem item);
 
-void deadbeef_toggle_play_pause (void);
+void
+update_playback_controls (void);
 
-gboolean deadbeef_preferences_available (void);
+void
+deadbeef_toggle_play_pause (void);
 
-void deadbeef_preferences_activate (void);
+gboolean
+deadbeef_preferences_available (void);
 
+void
+deadbeef_preferences_activate (void);
 
 #endif

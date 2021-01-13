@@ -1,7 +1,7 @@
 /*
  * deadbeef-statusnotifier-plugin - Copyright (C) 2015 Vladimir Perepechin
  *
- * x11-force-focus.h
+ * sni_flags.c
  * Copyright (C) 2014 Vladimir Perepechin <vovochka13@gmail.com>
  *
  * This file is part of deadbeef-statusnotifier-plugin.
@@ -20,13 +20,26 @@
  * deadbeef-statusnotifier-plugin. If not, see http://www.gnu.org/licenses/
  */
 
-#ifndef X11_FORCE_FOCUS_H
-#define X11_FORCE_FOCUS_H
+#include "sni.h"
 
-#include "gtk/gtk.h"
+typedef struct {
+    uint32_t v1;
+} sni_flags_t;
 
-void gdk_x11_window_force_focus (GdkWindow *window,
-                                 guint32    timestamp);
+static sni_flags_t sni_flags = {0};
 
+static inline gboolean
+sni_flag_get (uint32_t code) {
+    gboolean ret = (sni_flags.v1 & ((uint32_t)1 << code));
+    return ret;
+}
 
-#endif
+static inline void
+sni_flag_set (uint32_t code) {
+    sni_flags.v1 |= ((uint32_t)1 << code);
+}
+
+static inline void
+sni_flag_unset (uint32_t code) {
+    sni_flags.v1 &= ~((uint32_t)1 << code);
+}
