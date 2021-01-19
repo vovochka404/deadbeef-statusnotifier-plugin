@@ -63,7 +63,9 @@ enums.h: $(PATH_EXTRA)/enums.h.template $(PATH_EXTRA)/statusnotifier.h
 enums.c: $(PATH_EXTRA)/enums.c.template $(PATH_EXTRA)/statusnotifier.h
 	@$(APP_GLIB_MKENUMS) --template $^ > $@
 
-.PHONY: clean mkdirs_gtk3 mkdirs_gtk3
+.PHONY: clean format mkdirs_gtk3 mkdirs_gtk3
+format:
+	@clang-format -i $(abspath $(PATH_SRC)) *
 clean:
 	@rm -rf $(LIST_CLEAN)
 
