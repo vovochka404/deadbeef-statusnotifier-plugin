@@ -36,6 +36,7 @@ CFLAGS   +=$(call pkg_cflags, $(SNI_DEPS))
 LDFLAGS  ?= -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections
 INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA))
 
+
 GTK2 = gtk+-2.0
 GTK3 = gtk+-3.0
 
@@ -65,7 +66,8 @@ enums.c: $(PATH_EXTRA)/enums.c.template $(PATH_EXTRA)/statusnotifier.h
 
 .PHONY: clean format mkdirs_gtk3 mkdirs_gtk3
 format:
-	@clang-format -i $(abspath $(PATH_SRC)) *
+	@echo $(abspath $(PATH_SRC))
+	@find $(abspath $(PATH_SRC)) -type f -name "*.[c,h]" -print0 | xargs -0 clang-format -i
 clean:
 	@rm -rf $(LIST_CLEAN)
 
