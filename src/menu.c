@@ -20,32 +20,28 @@
  * deadbeef-statusnotifier-plugin. If not, see http://www.gnu.org/licenses/
  */
 
-
 #include "sni.h"
 
-DbusmenuMenuitem *menu;
-DbusmenuMenuitem *quit_item;
-DbusmenuMenuitem *play_item;
-DbusmenuMenuitem *stop_item;
-DbusmenuMenuitem *next_item;
-DbusmenuMenuitem *prev_item;
-DbusmenuMenuitem *pref_item;
-DbusmenuMenuitem *random_item;
+static DbusmenuMenuitem *menu;
+static DbusmenuMenuitem *quit_item;
+static DbusmenuMenuitem *play_item;
+static DbusmenuMenuitem *stop_item;
+static DbusmenuMenuitem *next_item;
+static DbusmenuMenuitem *prev_item;
+static DbusmenuMenuitem *pref_item;
+static DbusmenuMenuitem *random_item;
 
-DbusmenuMenuitem *pb_menu;
-DbusmenuMenuitem *pb_order_linear;
-DbusmenuMenuitem *pb_order_shuffle_tracks;
-DbusmenuMenuitem *pb_order_random;
-DbusmenuMenuitem *pb_order_shuffle_albums;
-DbusmenuMenuitem *pb_loop_all;
-DbusmenuMenuitem *pb_loop_none;
-DbusmenuMenuitem *pb_loop_single;
+static DbusmenuMenuitem *pb_menu;
+static DbusmenuMenuitem *pb_order_linear;
+static DbusmenuMenuitem *pb_order_shuffle_tracks;
+static DbusmenuMenuitem *pb_order_random;
+static DbusmenuMenuitem *pb_order_shuffle_albums;
+static DbusmenuMenuitem *pb_loop_all;
+static DbusmenuMenuitem *pb_loop_none;
+static DbusmenuMenuitem *pb_loop_single;
 
-GSList *pb_order;
-GSList *pb_loop;
-
-DbusmenuMenuitem*
-create_menu_item (gchar *label, gchar *icon_name, SNIContextMenuItemType item_type);
+static GSList *pb_order;
+static GSList *pb_loop;
 
 /* Generate actoion procedure name */
 #define SNI_CALLBACK_NAME(item) on_##item##_activate
@@ -115,44 +111,33 @@ update_playback_controls (void) {
     g_slist_foreach (pb_loop, check_list, GUINT_TO_POINTER (loop));
 }
 
-DbusmenuMenuitem *
-get_context_menu (void) {
-    if (menu)
-        return menu;
+static DbusmenuMenuitem*
+create_menu_item (gchar *label, gchar *icon_name, SNIContextMenuItemType item_type) {
+    DbusmenuMenuitem *item;
 
-    menu = create_menu_item (_("Deadbeef"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
-    dbusmenu_menuitem_set_root (menu, TRUE);
+    item = dbusmenu_menuitem_new ();
+    dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, label);
 
+    if (item_type == SNI_MENU_ITEM_TYPE_SEPARATOR)
+        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TYPE, "separator");
+    else if (item_type == SNI_MENU_ITEM_TYPE_RADIO)
+        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
+    else if (item_type == SNI_MENU_ITEM_TYPE_CHECKBOX)
+        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+
+    if (icon_name)
+        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_ICON_NAME, icon_name);
+
+    dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+    dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
+
+    return item;
+}
+
+static inline DbusmenuMenuitem*
+create_menu_playback (void) {
     pb_menu = create_menu_item (_("Playback"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
-
-//    g_object_ref (menu);
-
-    /** Common media controls **/
-
-    quit_item = create_menu_item (_("Quit"), "application-exit", SNI_MENU_ITEM_TYPE_COMMON);
-    play_item = create_menu_item (_("Play"), "media-playback-start", SNI_MENU_ITEM_TYPE_COMMON);
-    stop_item = create_menu_item (_("Stop"), "media-playback-stop", SNI_MENU_ITEM_TYPE_COMMON);
-    prev_item = create_menu_item (_("Previous"), "media-skip-backward", SNI_MENU_ITEM_TYPE_COMMON);
-    next_item = create_menu_item (_("Next"), "media-skip-forward", SNI_MENU_ITEM_TYPE_COMMON);
-    random_item = create_menu_item (_("Play Random"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
-
-    g_signal_connect (quit_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(quit)), NULL);
-    g_signal_connect (play_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(play)), NULL);
-    g_signal_connect (stop_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(stop)), NULL);
-    g_signal_connect (prev_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(prev)), NULL);
-    g_signal_connect (next_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(next)), NULL);
-    g_signal_connect (random_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (SNI_CALLBACK_NAME(random)), NULL);
-
-    dbusmenu_menuitem_child_append (menu, play_item);
-    dbusmenu_menuitem_child_append (menu, stop_item);
-    dbusmenu_menuitem_child_append (menu, prev_item);
-    dbusmenu_menuitem_child_append (menu, next_item);
-    dbusmenu_menuitem_child_append (menu, random_item);
-    dbusmenu_menuitem_child_append (menu, create_menu_item (NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
-
-    /** Playback settings controls **/
-    /** Playback order **/
-
+    
     pb_order_linear         = create_menu_item (_("Linear"), NULL, SNI_MENU_ITEM_TYPE_RADIO);
     g_object_set_data (G_OBJECT (pb_order_linear), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_LINEAR));
     pb_order = g_slist_append (pb_order, pb_order_linear);
@@ -202,7 +187,44 @@ get_context_menu (void) {
     dbusmenu_menuitem_child_append (pb_menu, pb_loop_single);
     dbusmenu_menuitem_child_append (pb_menu, pb_loop_none);
 
-    dbusmenu_menuitem_child_append (menu, pb_menu);
+    return pb_menu;
+}
+
+DbusmenuMenuitem *
+get_context_menu (void) {
+    if (menu)
+        return menu;
+
+    menu = create_menu_item (_("Deadbeef"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
+    dbusmenu_menuitem_set_root (menu, TRUE);
+
+//    g_object_ref (menu);
+
+    /** Common media controls **/
+
+    quit_item = create_menu_item (_("Quit"), "application-exit", SNI_MENU_ITEM_TYPE_COMMON);
+    play_item = create_menu_item (_("Play"), "media-playback-start", SNI_MENU_ITEM_TYPE_COMMON);
+    stop_item = create_menu_item (_("Stop"), "media-playback-stop", SNI_MENU_ITEM_TYPE_COMMON);
+    prev_item = create_menu_item (_("Previous"), "media-skip-backward", SNI_MENU_ITEM_TYPE_COMMON);
+    next_item = create_menu_item (_("Next"), "media-skip-forward", SNI_MENU_ITEM_TYPE_COMMON);
+    random_item = create_menu_item (_("Play Random"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
+
+    g_signal_connect (quit_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(quit)), NULL);
+    g_signal_connect (play_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(play)), NULL);
+    g_signal_connect (stop_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(stop)), NULL);
+    g_signal_connect (prev_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(prev)), NULL);
+    g_signal_connect (next_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,   G_CALLBACK (SNI_CALLBACK_NAME(next)), NULL);
+    g_signal_connect (random_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (SNI_CALLBACK_NAME(random)), NULL);
+
+    dbusmenu_menuitem_child_append (menu, play_item);
+    dbusmenu_menuitem_child_append (menu, stop_item);
+    dbusmenu_menuitem_child_append (menu, prev_item);
+    dbusmenu_menuitem_child_append (menu, next_item);
+    dbusmenu_menuitem_child_append (menu, random_item);
+    dbusmenu_menuitem_child_append (menu, create_menu_item (NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
+
+    /** Playback settings controls **/
+    dbusmenu_menuitem_child_append (menu, create_menu_playback());
     dbusmenu_menuitem_child_append (menu, create_menu_item (NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
 
     if (deadbeef_preferences_available ()) {
@@ -213,30 +235,6 @@ get_context_menu (void) {
     dbusmenu_menuitem_child_append (menu, quit_item);
 
     return menu;
-}
-
-DbusmenuMenuitem*
-create_menu_item (gchar *label, gchar *icon_name, SNIContextMenuItemType item_type) {
-    DbusmenuMenuitem *item;
-
-    item = dbusmenu_menuitem_new ();
-    dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, label);
-
-    if (item_type == SNI_MENU_ITEM_TYPE_SEPARATOR)
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TYPE, "separator");
-    else if (item_type == SNI_MENU_ITEM_TYPE_RADIO)
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
-    else if (item_type == SNI_MENU_ITEM_TYPE_CHECKBOX)
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-
-    if (icon_name)
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_ICON_NAME, icon_name);
-
-    dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
-    dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-
-
-    return item;
 }
 
 DbusmenuMenuitem *
