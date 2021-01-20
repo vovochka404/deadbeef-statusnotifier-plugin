@@ -88,4 +88,16 @@ deadbeef_preferences_available(void);
 void
 deadbeef_preferences_activate(void);
 
+int
+sni_context_menu_create(void);
+
+void
+sni_context_menu_release(void);
+
+#define sni_free_null(X)                                                                           \
+    do {                                                                                           \
+        free(X);                                                                                   \
+        X = NULL;                                                                                  \
+    } while (0);
+
 #endif

@@ -137,18 +137,23 @@ sni_enable(int enable) {
         return;
 
     if (enable && !icon) {
-        icon = status_notifier_new_from_icon_name(
-            "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS, "deadbeef");
-        status_notifier_set_status(icon, STATUS_NOTIFIER_STATUS_ACTIVE);
-        status_notifier_set_title(icon, "DeaDBeeF");
-        status_notifier_set_context_menu(icon, get_context_menu());
+        if (sni_context_menu_create() == 0) {
+            icon = status_notifier_new_from_icon_name(
+                "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS, "deadbeef");
+            status_notifier_set_status(icon, STATUS_NOTIFIER_STATUS_ACTIVE);
+            status_notifier_set_title(icon, "DeaDBeeF");
+            status_notifier_set_context_menu(icon, get_context_menu());
 
-        g_signal_connect(icon, "activate", (GCallback)on_activate_requested, NULL);
-        g_signal_connect(icon, "secondary-activate", (GCallback)on_sec_activate_requested, NULL);
-        g_signal_connect(icon, "scroll", (GCallback)on_scroll_requested, NULL);
+            g_signal_connect(icon, "activate", (GCallback)on_activate_requested, NULL);
+            g_signal_connect(icon, "secondary-activate", (GCallback)on_sec_activate_requested,
+                             NULL);
+            g_signal_connect(icon, "scroll", (GCallback)on_scroll_requested, NULL);
 
-        // Waiting notifier register process in separate thread
-        deadbeef->thread_start(callback_wait_notifier_register, (void *)icon);
+            // Waiting notifier register process in separate thread
+            deadbeef->thread_start(callback_wait_notifier_register, (void *)icon);
+        } else
+            deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s\n",
+                                   "DBus menu don't create");
     } else {
         g_object_unref(icon);
         icon = NULL;
@@ -223,11 +228,14 @@ sni_message(uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     switch (id) {
     case DB_EV_TERMINATE:
         sni_flag_unset(SNI_FLAG_LOADED);
+        sni_context_menu_release();
         break;
     case DB_EV_CONFIGCHANGED:
         g_debug("Event: DB_EV_CONFIGCHANGED");
         sni_configchanged();
-        update_playback_controls();
+
+        if (sni_flag_get(SNI_FLAG_LOADED))
+            update_playback_controls();
         break;
 
     case DB_EV_TRACKINFOCHANGED:
