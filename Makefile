@@ -12,7 +12,7 @@ PATH_BUILD3 ?= $(PATH_BUILD)/gtk3
 OUT_GTK2 ?= sni_gtk2.so
 OUT_GTK3 ?= sni_gtk3.so
 
-APP_GLIB_MKENUMS ?= $(abspath tools/glib-mkenums)#/usr/bin/glib-mkenums
+APP_GLIB_MKENUMS ?= $(abspath tools/glib-mkenums)
 
 LIST_CLEAN = CMakeCache.txt         \
 			 CMakeFiles             \
@@ -31,9 +31,9 @@ LIST_CLEAN = CMakeCache.txt         \
 SNI_DEFS += -DUSE_DBUSMENU -DENABLE_NLS -DG_LOG_DOMAIN=\"plugin-sni\"
 SNI_DEPS += dbusmenu-glib-0.4 x11
 
-CFLAGS   ?= -Wall -Wextra -g -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused# -O2 -fvisibility=hidden
+CFLAGS   ?= -Wall -Wextra -g -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -O2 -fvisibility=hidden
 CFLAGS   +=$(call pkg_cflags, $(SNI_DEPS))
-LDFLAGS  ?= -shared# -s -fdata-sections -ffunction-sections -Wl,-gc-sections
+LDFLAGS  ?= -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections
 INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA))
 
 
