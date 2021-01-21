@@ -28,9 +28,13 @@ FIND_PACKAGE (Gettext)
 
 OPTION (USE_GTK  "GTK+ 2.x interface" ON)
 OPTION (USE_GTK3 "GTK+ 3.x interface" ON)
+OPTION (USE_CUSTOM "Custom glib-mkenums tool" ON)
 
-
-FIND_PROGRAM(MKENUMS_EXECUTABLE NAMES glib-mkenums)
+IF (USE_CUSTOM)
+    SET(MKENUMS_EXECUTABLE ${PROJECT_SOURCE_DIR}/tools/glib-mkenums)
+ELSE (USE_CUSTOM)
+    FIND_PROGRAM(MKENUMS_EXECUTABLE NAMES glib-mkenums)
+ENDIF (USE_CUSTOM)
 
 SET (SNI_SOURCE_DIR ${PROJECT_SOURCE_DIR}/extras/statusnotifier/src)
 
