@@ -29,16 +29,29 @@ LIST_CLEAN = CMakeCache.txt         \
 			 *.ninja
 
 SNI_DEFS += -DUSE_DBUSMENU -DENABLE_NLS -DG_LOG_DOMAIN=\"plugin-sni\"
-SNI_DEPS += dbusmenu-glib-0.4 x11
+SNI_DEPS += dbusmenu-glib-0.4
 
-CFLAGS   ?= -Wall -Wextra -g -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -O2 -fvisibility=hidden
+CFLAGS   += -Wall -Wextra -g -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -O2 -fvisibility=hidden
 CFLAGS   +=$(call pkg_cflags, $(SNI_DEPS))
-LDFLAGS  ?= -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections
+LDFLAGS  += -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections -lX11
 INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA))
 
 
 GTK2 = gtk+-2.0
 GTK3 = gtk+-3.0
+
+ifndef (GTK2_CFLAGS)
+    GTK2_CFLAGS ?= $(call pkg_cflags, $(GTK2))
+endif
+ifndef (GTK2_LIBS)
+    GTK2_LIBS ?= $(call pkg_ldflags, $(GTK2))
+endif
+ifndef (GTK3_CFLAGS)
+    GTK3_CFLAGS ?= $(call pkg_cflags, $(GTK3))
+endif
+ifndef (GTK3_LIBS)
+    GTK3_LIBS ?= $(call pkg_ldflags, $(GTK3))
+endif
 
 SNI_SRC_LIST = menu.c sni.c
 SNI_EXT_LIST = statusnotifier.c closures.c
@@ -84,13 +97,13 @@ mkdirs_gtk2:
 ## BUILD TARGETS
 
 $(PATH_BUILD)/$(OUT_GTK3): $(OBJ_GTK3)
-	@$(call link, $(call pkg_ldflags, $(GTK3)) $(call pkg_ldflags, $(SNI_DEPS)))
+	$(call link, $(GTK3_LIBS) $(call pkg_ldflags, $(SNI_DEPS)))
 
 $(PATH_BUILD3)/%.o: $(SNI_SRC)
-	@$(call compile, $(call pkg_cflags, $(GTK3)), $(filter %$(@F:%.o=%.c), $^))
+	$(call compile, $(GTK3_CFLAGS), $(filter %$(@F:%.o=%.c), $^))
 
 $(PATH_BUILD)/$(OUT_GTK2): $(OBJ_GTK2)
-	@$(call link, $(call pkg_ldflags, $(GTK2)) $(call pkg_ldflags, $(SNI_DEPS)))
+	$(call link, $(GTK2_LIBS) $(call pkg_ldflags, $(SNI_DEPS)))
 
 $(PATH_BUILD2)/%.o: $(SNI_SRC)
-	@$(call compile, $(call pkg_cflags, $(GTK2)), $(filter %$(@F:%.o=%.c), $^))
+	$(call compile, $(GTK2_CFLAGS), $(filter %$(@F:%.o=%.c), $^))
