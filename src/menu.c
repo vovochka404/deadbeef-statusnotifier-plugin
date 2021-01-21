@@ -268,19 +268,22 @@ get_context_menu(void) {
 int
 sni_context_menu_create(void) {
     deadbeef = deadbeef_get_instance();
-    if (deadbeef) {
-        sm = calloc(1, sizeof(sni_menu_t));
-        if (sm) {
-            sm->pb_lock = deadbeef->mutex_create();
-            if (sm->pb_lock) {
-                create_context_menu();
-                return 0;
-            } else {
-                sni_free_null(sm);
-            }
-        }
+    if (deadbeef == NULL)
+        return -1;
+    
+    sm = calloc(1, sizeof(sni_menu_t));
+    if (sm == NULL)
+        return -1;
+
+    sm->pb_lock = deadbeef->mutex_create();
+    if (sm->pb_lock) {
+        create_context_menu();
+    } else {
+        sni_free_null(sm);
+        return -1;
     }
-    return -1;
+    
+    return 0;
 }
 
 void
