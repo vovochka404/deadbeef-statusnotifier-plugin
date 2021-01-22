@@ -41,16 +41,16 @@ GTK2 = gtk+-2.0
 GTK3 = gtk+-3.0
 
 ifndef (GTK2_CFLAGS)
-    GTK2_CFLAGS ?= $(call pkg_cflags, $(GTK2))
+    GTK2_CFLAGS = $(call pkg_cflags, $(GTK2))
 endif
 ifndef (GTK2_LIBS)
-    GTK2_LIBS ?= $(call pkg_ldflags, $(GTK2))
+    GTK2_LIBS = $(call pkg_ldflags, $(GTK2))
 endif
 ifndef (GTK3_CFLAGS)
-    GTK3_CFLAGS ?= $(call pkg_cflags, $(GTK3))
+    GTK3_CFLAGS = $(call pkg_cflags, $(GTK3))
 endif
 ifndef (GTK3_LIBS)
-    GTK3_LIBS ?= $(call pkg_ldflags, $(GTK3))
+    GTK3_LIBS = $(call pkg_ldflags, $(GTK3))
 endif
 
 SNI_SRC_LIST = menu.c sni.c
@@ -69,7 +69,7 @@ endef
 
 ### TARGETS
 
-all: gtk3 gtk2
+all: gtk3
 
 mkenums: enums.c enums.h
 enums.h: $(PATH_EXTRA)/enums.h.template $(PATH_EXTRA)/statusnotifier.h
@@ -97,13 +97,13 @@ mkdirs_gtk2:
 ## BUILD TARGETS
 
 $(PATH_BUILD)/$(OUT_GTK3): $(OBJ_GTK3)
-	$(call link, $(GTK3_LIBS) $(call pkg_ldflags, $(SNI_DEPS)))
+	@$(call link, $(GTK3_LIBS) $(call pkg_ldflags, $(SNI_DEPS)))
 
 $(PATH_BUILD3)/%.o: $(SNI_SRC)
-	$(call compile, $(GTK3_CFLAGS), $(filter %$(@F:%.o=%.c), $^))
+	@$(call compile, $(GTK3_CFLAGS), $(filter %$(@F:%.o=%.c), $^))
 
 $(PATH_BUILD)/$(OUT_GTK2): $(OBJ_GTK2)
-	$(call link, $(GTK2_LIBS) $(call pkg_ldflags, $(SNI_DEPS)))
+	@$(call link, $(GTK2_LIBS) $(call pkg_ldflags, $(SNI_DEPS)))
 
 $(PATH_BUILD2)/%.o: $(SNI_SRC)
-	$(call compile, $(GTK2_CFLAGS), $(filter %$(@F:%.o=%.c), $^))
+	@$(call compile, $(GTK2_CFLAGS), $(filter %$(@F:%.o=%.c), $^))
