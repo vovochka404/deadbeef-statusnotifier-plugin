@@ -63,7 +63,7 @@ static DB_functions_t *deadbeef;
 #define SNI_CALLBACK_NAME(item) on_##item##_activate
 /* Menu item callback declaration */
 #define SNI_MENU_ITEM_CALLBACK(item)                                                               \
-    SNI_EXPORT_FUNC void SNI_CALLBACK_NAME(item)(DbusmenuMenuitem * menuitem)
+    void SNI_CALLBACK_NAME(item)(DbusmenuMenuitem * menuitem)
 
 /* Menu item simple messaging function macro */
 static inline void
@@ -216,23 +216,23 @@ static inline DbusmenuMenuitem *
 create_menu_playback(void) {
     sm->pb_menu = create_menu_item(_("Playback"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
 
-    CREATE_PLAYBACK_ITEM(order, linear, _("Linear"), PLAYBACK_ORDER_LINEAR,
+    CREATE_PLAYBACK_ITEM(order, linear, _("Shuffle - Off"), PLAYBACK_ORDER_LINEAR,
                          SNI_CALLBACK_NAME(playback_order));
-    CREATE_PLAYBACK_ITEM(order, shuffle_tracks, _("Shuffle tracks"), PLAYBACK_ORDER_SHUFFLE_TRACKS,
-                         SNI_CALLBACK_NAME(playback_order));
-    CREATE_PLAYBACK_ITEM(order, shuffle_albums, _("Shuffle albums"), PLAYBACK_ORDER_SHUFFLE_ALBUMS,
-                         SNI_CALLBACK_NAME(playback_order));
-    CREATE_PLAYBACK_ITEM(order, random, _("Random"), PLAYBACK_ORDER_RANDOM,
+    CREATE_PLAYBACK_ITEM(order, shuffle_tracks, _("Shuffle - Tracks"),
+                         PLAYBACK_ORDER_SHUFFLE_TRACKS, SNI_CALLBACK_NAME(playback_order));
+    CREATE_PLAYBACK_ITEM(order, shuffle_albums, _("Shuffle - Albums"),
+                         PLAYBACK_ORDER_SHUFFLE_ALBUMS, SNI_CALLBACK_NAME(playback_order));
+    CREATE_PLAYBACK_ITEM(order, random, _("Shuffle - Random Tracks"), PLAYBACK_ORDER_RANDOM,
                          SNI_CALLBACK_NAME(playback_order));
 
     dbusmenu_menuitem_child_append(sm->pb_menu,
                                    create_menu_item(NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
 
-    CREATE_PLAYBACK_ITEM(loop, all, _("Loop all"), PLAYBACK_MODE_LOOP_ALL,
+    CREATE_PLAYBACK_ITEM(loop, all, _("Repeat - All"), PLAYBACK_MODE_LOOP_ALL,
                          SNI_CALLBACK_NAME(playback_loop));
-    CREATE_PLAYBACK_ITEM(loop, single, _("Loop single song"), PLAYBACK_MODE_LOOP_SINGLE,
+    CREATE_PLAYBACK_ITEM(loop, single, _("Repeat - Single Track"), PLAYBACK_MODE_LOOP_SINGLE,
                          SNI_CALLBACK_NAME(playback_loop));
-    CREATE_PLAYBACK_ITEM(loop, none, _("Don't loop"), PLAYBACK_MODE_NOLOOP,
+    CREATE_PLAYBACK_ITEM(loop, none, _("Repeat - Off"), PLAYBACK_MODE_NOLOOP,
                          SNI_CALLBACK_NAME(playback_loop));
 
     update_playback_controls();

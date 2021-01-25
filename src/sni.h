@@ -24,7 +24,6 @@
 #define SNI_H
 
 #if ENABLE_NLS
-
     #include <libintl.h>
     #define PACKAGE "deadbeef"
     #define _(String) dgettext(PACKAGE, String)

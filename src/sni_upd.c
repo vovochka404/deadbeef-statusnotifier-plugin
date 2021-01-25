@@ -24,14 +24,14 @@
 
 #define TOOLTIP_FORMAT                                                                             \
     "<b>[%s]</b><br/>"                                                                             \
-    "<b>Title:</b> %s<br/>"                                                                        \
-    "<b>Artist:</b> %s<br/>"                                                                       \
-    "<b>Album:</b> %s%s%s%s"
+    "<b>%s:</b> %s<br/>"                                                                           \
+    "<b>%s:</b> %s<br/>"                                                                           \
+    "<b>%s:</b> %s%s%s%s"
 #define TOOLTIP_FORMAT_PLAIN                                                                       \
     "[%s]"                                                                                         \
-    "\nTitle: %s"                                                                                  \
-    "\nArtist: %s"                                                                                 \
-    "\nAlbum: %s%s%s%s"
+    "\n%s: %s"                                                                                     \
+    "\n%s: %s"                                                                                     \
+    "\n%s: %s%s%s%s"
 
 #define STATE_WAITING_CYCLE 10000
 #define TOOLTIP_MAX_LENGTH 1000
@@ -81,14 +81,14 @@ sni_get_tooltip(DB_playItem_t *track, int state, const gchar *fmt, gchar *buf, s
 
     // clang-format off
     g_snprintf(buf, sz, fmt,
-               (state == OUTPUT_STATE_PAUSED) ? _("Playback paused")
-                                              : _("Playback played"),
-               escaped_title  ? escaped_title  : ns,
-               escaped_artist ? escaped_artist : ns,
-               escaped_album  ? escaped_album  : ns,
-               escaped_date   ? " ["           : "",
-               escaped_date   ? escaped_date   : "",
-               escaped_date   ? "]"            : "");
+               (state == OUTPUT_STATE_PAUSED) ? _("Paused")
+                                              : _("Playing"),
+               _("Title"),  escaped_title  ? escaped_title  : ns,
+               _("Artist"), escaped_artist ? escaped_artist : ns,
+               _("Album"),  escaped_album  ? escaped_album  : ns,
+                            escaped_date   ? " ["           : "",
+                            escaped_date   ? escaped_date   : "",
+                            escaped_date   ? "]"            : "");
     // clang-format on
 
     g_free(escaped_title);
