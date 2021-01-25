@@ -339,7 +339,7 @@ static DB_misc_t plugin = {
     .plugin.api_vmajor = 1,
     .plugin.api_vminor = 11,
     .plugin.version_major = 1,
-    .plugin.version_minor = 3,
+    .plugin.version_minor = 4,
 #if GTK_CHECK_VERSION(3, 0, 0)
     .plugin.id = "sni_gtk3",
     .plugin.name = "Status Notifier for GTK3 UI",
