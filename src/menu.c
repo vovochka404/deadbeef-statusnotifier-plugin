@@ -23,30 +23,34 @@
 #include "sni.h"
 
 typedef struct {
-    DbusmenuMenuitem *menu;
-    DbusmenuMenuitem *item_quit;
-    DbusmenuMenuitem *item_play;
-    DbusmenuMenuitem *item_stop;
-    DbusmenuMenuitem *item_next;
-    DbusmenuMenuitem *item_prev;
-    DbusmenuMenuitem *item_pref;
-    DbusmenuMenuitem *item_random;
+    DbusmenuMenuitem *menu;        // root menu item
+    DbusmenuMenuitem *item_quit;   // quit button
+    DbusmenuMenuitem *item_play;   // play button
+    DbusmenuMenuitem *item_stop;   // stop button
+    DbusmenuMenuitem *item_next;   // next button
+    DbusmenuMenuitem *item_prev;   // prev button
+    DbusmenuMenuitem *item_pref;   // preference (settings) button
+    DbusmenuMenuitem *item_random; // shuffle button
 
-    DbusmenuMenuitem *pb_menu;
+    DbusmenuMenuitem *pb_menu; // playback menu root item
+    /* Shuffle menu */
     struct {
-        DbusmenuMenuitem *item_linear;
-        DbusmenuMenuitem *item_shuffle_tracks;
-        DbusmenuMenuitem *item_random;
-        DbusmenuMenuitem *item_shuffle_albums;
+        DbusmenuMenuitem *item_linear;         // DDB_SHUFFLE_OFF
+        DbusmenuMenuitem *item_shuffle_tracks; // DDB_SHUFFLE_TRACKS
+        DbusmenuMenuitem *item_random;         // DDB_SHUFFLE_RANDOM
+        DbusmenuMenuitem *item_shuffle_albums; // DDB_SHUFFLE_ALBUMS
 
-        GSList *list;
+        // Private
+        DbusmenuMenuitem *active_now; // now playback state
     } pb_order;
+    /* Repeat menu */
     struct {
-        DbusmenuMenuitem *item_all;
-        DbusmenuMenuitem *item_none;
-        DbusmenuMenuitem *item_single;
+        DbusmenuMenuitem *item_all;    // DDB_REPEAT_ALL
+        DbusmenuMenuitem *item_none;   // DDB_REPEAT_NONE
+        DbusmenuMenuitem *item_single; // DDB_REPEAT_SINGLE
 
-        GSList *list;
+        // Private
+        DbusmenuMenuitem *active_now; // now playback state
     } pb_loop;
 
     uintptr_t pb_lock;
@@ -58,7 +62,8 @@ static DB_functions_t *deadbeef;
 /* Generate actoion procedure name */
 #define SNI_CALLBACK_NAME(item) on_##item##_activate
 /* Menu item callback declaration */
-#define SNI_MENU_ITEM_CALLBACK(item) void SNI_CALLBACK_NAME(item)(DbusmenuMenuitem * menuitem)
+#define SNI_MENU_ITEM_CALLBACK(item)                                                               \
+    SNI_EXPORT_FUNC void SNI_CALLBACK_NAME(item)(DbusmenuMenuitem * menuitem)
 
 /* Menu item simple messaging function macro */
 static inline void
@@ -100,13 +105,55 @@ SNI_MENU_ITEM_CALLBACK(playback_loop) {
     deadbeef->sendmessage(DB_EV_CONFIGCHANGED, 0, 0, 0);
 }
 
-void
-check_list(gpointer item, gpointer data) {
-    guint32 val = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "pb_data"));
-    dbusmenu_menuitem_property_set_int(DBUSMENU_MENUITEM(item), DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                       val == GPOINTER_TO_UINT(data)
-                                           ? DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED
-                                           : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+static inline void
+change_toogle_items(DbusmenuMenuitem *old, DbusmenuMenuitem *new) {
+    if (old)
+        dbusmenu_menuitem_property_set_int(old, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                           DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+    dbusmenu_menuitem_property_set_int(new, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                       DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+}
+
+static inline void
+update_playback_orders(const guint32 state) {
+    DbusmenuMenuitem *item_changed = NULL;
+    switch (state) {
+    case DDB_SHUFFLE_OFF:
+        item_changed = sm->pb_order.item_linear;
+        break;
+    case DDB_SHUFFLE_TRACKS:
+        item_changed = sm->pb_order.item_shuffle_tracks;
+        break;
+    case DDB_SHUFFLE_RANDOM:
+        item_changed = sm->pb_order.item_random;
+        break;
+    case DDB_SHUFFLE_ALBUMS:
+        item_changed = sm->pb_order.item_shuffle_albums;
+    }
+    if (item_changed != sm->pb_order.active_now) {
+        change_toogle_items(sm->pb_order.active_now, item_changed);
+        sm->pb_order.active_now = item_changed;
+    }
+}
+
+static inline void
+update_playback_loops(const guint32 state) {
+    DbusmenuMenuitem *item_changed = NULL;
+    switch (state) {
+    case DDB_REPEAT_ALL:
+        item_changed = sm->pb_loop.item_all;
+        break;
+    case DDB_REPEAT_OFF:
+        item_changed = sm->pb_loop.item_none;
+        break;
+    case DDB_REPEAT_SINGLE:
+        item_changed = sm->pb_loop.item_single;
+        break;
+    }
+    if (item_changed != sm->pb_loop.active_now) {
+        change_toogle_items(sm->pb_loop.active_now, item_changed);
+        sm->pb_loop.active_now = item_changed;
+    }
 }
 
 void
@@ -116,11 +163,8 @@ update_playback_controls(void) {
 
     deadbeef->mutex_lock(sm->pb_lock);
 
-    guint32 order = deadbeef->conf_get_int("playback.order", 0);
-    guint32 loop = deadbeef->conf_get_int("playback.loop", 0);
-
-    g_slist_foreach(sm->pb_order.list, check_list, GUINT_TO_POINTER(order));
-    g_slist_foreach(sm->pb_loop.list, check_list, GUINT_TO_POINTER(loop));
+    update_playback_orders(deadbeef->conf_get_int("playback.order", 0));
+    update_playback_loops(deadbeef->conf_get_int("playback.loop", 0));
 
     deadbeef->mutex_unlock(sm->pb_lock);
 }
@@ -162,8 +206,6 @@ create_menu_item(gchar *label, gchar *icon_name, SNIContextMenuItemType item_typ
     do {                                                                                           \
         sm->pb_##menu.item_##name = create_menu_item(label, NULL, SNI_MENU_ITEM_TYPE_RADIO);       \
         g_object_set_data(G_OBJECT(sm->pb_##menu.item_##name), "pb_data", GUINT_TO_POINTER(mode)); \
-        sm->pb_##menu.list = g_slist_append(sm->pb_##menu.list, sm->pb_##menu.item_##name);        \
-                                                                                                   \
         g_signal_connect(sm->pb_##menu.item_##name, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,       \
                          G_CALLBACK(callback), NULL);                                              \
                                                                                                    \
@@ -270,7 +312,7 @@ sni_context_menu_create(void) {
     deadbeef = deadbeef_get_instance();
     if (deadbeef == NULL)
         return -1;
-    
+
     sm = calloc(1, sizeof(sni_menu_t));
     if (sm == NULL)
         return -1;
@@ -282,7 +324,7 @@ sni_context_menu_create(void) {
         sni_free_null(sm);
         return -1;
     }
-    
+
     return 0;
 }
 
