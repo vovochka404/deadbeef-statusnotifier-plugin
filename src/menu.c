@@ -240,7 +240,7 @@ create_menu_playback(void) {
     return sm->pb_menu;
 }
 
-#undef create_playback_item
+#undef CREATE_PLAYBACK_ITEM
 
 #define CREATE_CONTEXT_ITEM(name, label, icon, callback)                                           \
     do {                                                                                           \
@@ -279,7 +279,7 @@ create_context_menu(void) {
     return sm->menu;
 }
 
-#undef create_context_menu
+#undef CREATE_CONTEXT_MENU
 
 DbusmenuMenuitem *
 get_context_menu_item(SNIContextMenuItem item) {
