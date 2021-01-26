@@ -24,13 +24,14 @@
 
 typedef struct {
     DbusmenuMenuitem *menu;        // root menu item
-    DbusmenuMenuitem *item_quit;   // quit button
     DbusmenuMenuitem *item_play;   // play button
     DbusmenuMenuitem *item_stop;   // stop button
     DbusmenuMenuitem *item_next;   // next button
     DbusmenuMenuitem *item_prev;   // prev button
     DbusmenuMenuitem *item_pref;   // preference (settings) button
     DbusmenuMenuitem *item_random; // shuffle button
+    DbusmenuMenuitem *item_help;   // about button
+    DbusmenuMenuitem *item_quit;   // quit button
 
     DbusmenuMenuitem *pb_menu; // playback menu root item
     /* Shuffle menu */
@@ -85,6 +86,8 @@ SNI_MENU_ITEM_MESSAGE(prev, DB_EV_PREV);
 SNI_MENU_ITEM_MESSAGE(random, DB_EV_PLAY_RANDOM);
 
 SNI_MENU_ITEM_CALLBACK(pref) { deadbeef_preferences_activate(); }
+
+SNI_MENU_ITEM_CALLBACK(help) { deadbeef_help_activate(); }
 
 SNI_MENU_ITEM_CALLBACK(playback_order) {
     DB_functions_t *deadbeef = deadbeef_get_instance();
@@ -273,7 +276,12 @@ create_context_menu(void) {
     CREATE_SEPARATOR_ITEM(sm->menu);
 
     if (deadbeef_preferences_available())
-        CREATE_CONTEXT_ITEM(pref, _("Preferences"), "configure", SNI_CALLBACK_NAME(pref));
+        CREATE_CONTEXT_ITEM(pref, _("Preferences"), "preferences-system", SNI_CALLBACK_NAME(pref));
+
+    if (deadbeef_help_available())
+        CREATE_CONTEXT_ITEM(help, _("Help"), "help-contents", SNI_CALLBACK_NAME(help));
+
+    CREATE_SEPARATOR_ITEM(sm->menu);
 
     CREATE_CONTEXT_ITEM(quit, _("Quit"), "application-exit", SNI_CALLBACK_NAME(quit));
 

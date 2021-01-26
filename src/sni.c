@@ -31,6 +31,7 @@ static StatusNotifier *icon = NULL;
 
 static DB_plugin_action_t *toggle_mainwindow_action = NULL;
 static DB_plugin_action_t *preferences_action = NULL;
+static DB_plugin_action_t *help_action = NULL;
 
 static DB_functions_t *deadbeef = NULL;
 static ddb_gtkui_t *gtkui_plugin;
@@ -215,6 +216,16 @@ deadbeef_preferences_activate(void) {
     preferences_action->callback2(preferences_action, 0);
 }
 
+gboolean
+deadbeef_help_available(void) {
+    return help_action != NULL;
+}
+
+void
+deadbeef_help_activate(void) {
+    help_action->callback2(help_action, 0);
+}
+
 static void
 sni_configchanged(void) {
     int enabled = deadbeef->conf_get_int("sni.enabled", 1);
@@ -282,6 +293,8 @@ sni_connect() {
             toggle_mainwindow_action = actions;
         } else if (g_strcmp0(actions->name, "preferences") == 0) {
             preferences_action = actions;
+        } else if (g_strcmp0(actions->name, "help") == 0) {
+            help_action = actions;
         }
         actions = actions->next;
     }

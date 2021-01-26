@@ -89,6 +89,12 @@ deadbeef_preferences_available(void);
 void
 deadbeef_preferences_activate(void);
 
+gboolean
+deadbeef_help_available(void);
+
+void
+deadbeef_help_activate(void);
+
 int
 sni_context_menu_create(void);
 
