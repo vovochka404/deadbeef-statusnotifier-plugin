@@ -26,12 +26,12 @@
     "<b>[%s]</b><br/>"                                                                             \
     "<b>%s:</b> %s<br/>"                                                                           \
     "<b>%s:</b> %s<br/>"                                                                           \
-    "<b>%s:</b> %s%s%s%s"
+    "<b>%s:</b> %s %c%s%c"
 #define TOOLTIP_FORMAT_PLAIN                                                                       \
     "[%s]"                                                                                         \
     "\n%s: %s"                                                                                     \
     "\n%s: %s"                                                                                     \
-    "\n%s: %s%s%s%s"
+    "\n%s: %s %c%s%c"
 
 #define STATE_WAITING_CYCLE 10000
 #define TOOLTIP_MAX_LENGTH 1000
@@ -86,9 +86,9 @@ sni_get_tooltip(DB_playItem_t *track, int state, const gchar *fmt, gchar *buf, s
                _("Title"),  escaped_title  ? escaped_title  : ns,
                _("Artist"), escaped_artist ? escaped_artist : ns,
                _("Album"),  escaped_album  ? escaped_album  : ns,
-                            escaped_date   ? " ["           : "",
+                            escaped_date   ? '['            : 0,
                             escaped_date   ? escaped_date   : "",
-                            escaped_date   ? "]"            : "");
+                            escaped_date   ? ']'            : 0);
     // clang-format on
 
     g_free(escaped_title);
