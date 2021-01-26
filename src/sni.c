@@ -338,6 +338,8 @@ static const char settings_dlg[] =
     "property \"Display Status Notifier tooltip (if DE support this)\" checkbox sni.enable_tooltip 1;\n"
     "property \"Use plain text tooltip (if DE not support HTML tooltips)\" checkbox sni.tooltip_plain_text 0;\n"
     "property \"Set tooltip icon (if DE support this)\" checkbox sni.tooltip_enable_icon 1;\n"
+    
+    "property \"Enable playback options in menu (need restart)\" checkbox sni.menu_enable_playback 1;\n"
 
     "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"

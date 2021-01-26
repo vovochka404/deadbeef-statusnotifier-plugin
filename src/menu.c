@@ -160,7 +160,9 @@ update_playback_loops(const guint32 state) {
 
 void
 update_playback_controls(void) {
-    if (sm == NULL)
+    if (deadbeef->conf_get_int("sni.menu_enable_playback", 1) == 0)
+        return;
+    if ((sm == NULL) || (sm->pb_menu == NULL))
         return;
 
     deadbeef->mutex_lock(sm->pb_lock);
@@ -272,8 +274,10 @@ create_context_menu(void) {
     CREATE_SEPARATOR_ITEM(sm->menu);
 
     /** Playback settings controls **/
-    dbusmenu_menuitem_child_append(sm->menu, create_menu_playback());
-    CREATE_SEPARATOR_ITEM(sm->menu);
+    if (deadbeef->conf_get_int("sni.menu_enable_playback", 1)) {
+        dbusmenu_menuitem_child_append(sm->menu, create_menu_playback());
+        CREATE_SEPARATOR_ITEM(sm->menu);
+    }
 
     if (deadbeef_preferences_available())
         CREATE_CONTEXT_ITEM(pref, _("Preferences"), "preferences-system", SNI_CALLBACK_NAME(pref));
