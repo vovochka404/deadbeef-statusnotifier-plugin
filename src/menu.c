@@ -62,8 +62,7 @@ static DB_functions_t *deadbeef;
 /* Generate actoion procedure name */
 #define SNI_CALLBACK_NAME(item) on_##item##_activate
 /* Menu item callback declaration */
-#define SNI_MENU_ITEM_CALLBACK(item)                                                               \
-    void SNI_CALLBACK_NAME(item)(DbusmenuMenuitem * menuitem)
+#define SNI_MENU_ITEM_CALLBACK(item) void SNI_CALLBACK_NAME(item)(DbusmenuMenuitem * menuitem)
 
 /* Menu item simple messaging function macro */
 static inline void
@@ -202,6 +201,10 @@ create_menu_item(gchar *label, gchar *icon_name, SNIContextMenuItemType item_typ
     return item;
 }
 
+#define CREATE_SEPARATOR_ITEM(menu)                                                                \
+    dbusmenu_menuitem_child_append(menu,                                                           \
+                                   create_menu_item(NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
+
 #define CREATE_PLAYBACK_ITEM(menu, name, label, mode, callback)                                    \
     do {                                                                                           \
         sm->pb_##menu.item_##name = create_menu_item(label, NULL, SNI_MENU_ITEM_TYPE_RADIO);       \
@@ -225,8 +228,7 @@ create_menu_playback(void) {
     CREATE_PLAYBACK_ITEM(order, random, _("Shuffle - Random Tracks"), PLAYBACK_ORDER_RANDOM,
                          SNI_CALLBACK_NAME(playback_order));
 
-    dbusmenu_menuitem_child_append(sm->pb_menu,
-                                   create_menu_item(NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
+    CREATE_SEPARATOR_ITEM(sm->pb_menu);
 
     CREATE_PLAYBACK_ITEM(loop, all, _("Repeat - All"), PLAYBACK_MODE_LOOP_ALL,
                          SNI_CALLBACK_NAME(playback_loop));
@@ -264,12 +266,11 @@ create_context_menu(void) {
     CREATE_CONTEXT_ITEM(next, _("Next"), "media-skip-forward", SNI_CALLBACK_NAME(next));
     CREATE_CONTEXT_ITEM(random, _("Play Random"), NULL, SNI_CALLBACK_NAME(random));
 
-    dbusmenu_menuitem_child_append(sm->menu,
-                                   create_menu_item(NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
+    CREATE_SEPARATOR_ITEM(sm->menu);
+
     /** Playback settings controls **/
     dbusmenu_menuitem_child_append(sm->menu, create_menu_playback());
-    dbusmenu_menuitem_child_append(sm->menu,
-                                   create_menu_item(NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
+    CREATE_SEPARATOR_ITEM(sm->menu);
 
     if (deadbeef_preferences_available())
         CREATE_CONTEXT_ITEM(pref, _("Preferences"), "configure", SNI_CALLBACK_NAME(pref));
@@ -279,7 +280,8 @@ create_context_menu(void) {
     return sm->menu;
 }
 
-#undef CREATE_CONTEXT_MENU
+#undef CREATE_CONTEXT_ITEM
+#undef CREATE_SEPARATOR_ITEM
 
 DbusmenuMenuitem *
 get_context_menu_item(SNIContextMenuItem item) {

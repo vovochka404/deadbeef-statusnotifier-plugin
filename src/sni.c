@@ -107,7 +107,7 @@ callback_wait_notifier_register(void *ctx) {
 
     status_notifier_register(sni_ctx);
 
-    uint32_t wait_time = deadbeef->conf_get_int("sni.waiting_sec", 60);
+    uint32_t wait_time = deadbeef->conf_get_int("sni.waiting_sec", 30);
     for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
@@ -329,7 +329,7 @@ static const char settings_dlg[] =
     "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
 
-    "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_sec 60;\n"
+    "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_sec 30;\n"
 ;
 // clang-format on
 
