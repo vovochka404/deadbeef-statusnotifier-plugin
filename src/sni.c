@@ -114,6 +114,7 @@ callback_wait_notifier_register(void *ctx) {
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
             sni_flag_set(SNI_FLAG_LOADED);
             sni_update_status(-1);
+
             deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s: %s\n",
                                    "Status notifier register success",
                                    status_notifier_get_id(sni_ctx));

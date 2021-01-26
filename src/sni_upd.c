@@ -33,6 +33,8 @@
     "\n%s: %s"                                                                                     \
     "\n%s: %s %c%s%c"
 
+#define TOOLTIP_DEFAULT_TITLE "DeaDBeeF"
+
 #define STATE_WAITING_CYCLE 10000
 #define TOOLTIP_MAX_LENGTH 1000
 
@@ -120,24 +122,25 @@ static inline void
 sni_set_tooltip_textonly(DB_playItem_t *track, int state) {
     gchar title_body[TOOLTIP_MAX_LENGTH];
     sni_get_tooltip(track, state, _(TOOLTIP_FORMAT_PLAIN), title_body, TOOLTIP_MAX_LENGTH);
-    status_notifier_set_tooltip_body(icon, title_body);
+    status_notifier_set_tooltip(icon, NULL, TOOLTIP_DEFAULT_TITLE, title_body);
 }
 
 static inline void
 sni_set_tooltip_html(DB_playItem_t *track, int state) {
     gchar title_body[TOOLTIP_MAX_LENGTH];
-
     sni_get_tooltip(track, state, _(TOOLTIP_FORMAT), title_body, TOOLTIP_MAX_LENGTH);
+
     if (deadbeef->conf_get_int("sni.tooltip_enable_icon", 1)) {
         GdkPixbuf *pic = sni_get_coverart(track);
         if (pic) {
+            status_notifier_set_tooltip(icon, NULL, TOOLTIP_DEFAULT_TITLE, title_body);
             status_notifier_set_from_pixbuf(icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic);
             g_object_unref(pic);
         } else {
-            status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_TOOLTIP_ICON, "deadbeef");
+            status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, title_body);
         }
-    }
-    status_notifier_set_tooltip_body(icon, title_body);
+    } else
+        status_notifier_set_tooltip(icon, NULL, TOOLTIP_DEFAULT_TITLE, title_body);
 }
 
 /* === main update functions === */
@@ -158,7 +161,7 @@ sni_update_tooltip(int state) {
     if (out_state >= 0) {
         switch (out_state) {
         case DDB_PLAYBACK_STATE_STOPPED:
-            status_notifier_set_tooltip(icon, "deadbeef", "DeaDBeeF", _("Playback stopped"));
+            status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, _("Stopped"));
             break;
         case DDB_PLAYBACK_STATE_PAUSED:
         case DDB_PLAYBACK_STATE_PLAYING: {
@@ -170,13 +173,13 @@ sni_update_tooltip(int state) {
 
                 deadbeef->pl_item_unref(track);
             } else {
-                status_notifier_set_tooltip(icon, "deadbeef", "DeaDBeeF", _("Playing"));
+                status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, _("Playing"));
             }
             break;
         }
         }
     } else {
-        status_notifier_set_tooltip(icon, "deadbeef", "DeaDBeeF", NULL);
+        status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, NULL);
     }
 }
 
