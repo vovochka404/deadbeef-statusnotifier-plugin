@@ -134,7 +134,7 @@ sni_set_tooltip_html(DB_playItem_t *track, int state) {
         (state == DDB_PLAYBACK_STATE_PLAYING)) {
         GdkPixbuf *pic = sni_get_coverart(track);
         if (pic) {
-//            printf("Pixbuf: %zu\n", gdk_pixbuf_get_byte_length(pic));
+            //            printf("Pixbuf: %zu\n", gdk_pixbuf_get_byte_length(pic));
             status_notifier_set_tooltip2(icon, pic, TOOLTIP_DEFAULT_TITLE, title_body);
             g_object_unref(pic);
         } else {
