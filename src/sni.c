@@ -112,6 +112,8 @@ callback_wait_notifier_register(void *ctx) {
     for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
+            //            sleep(5);
+
             sni_flag_set(SNI_FLAG_LOADED);
             sni_update_status(-1);
 
@@ -251,9 +253,11 @@ sni_message(uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
         break;
 
     case DB_EV_TRACKINFOCHANGED:
-        if (p1 == DDB_PLAYLIST_CHANGE_CONTENT) {
-            g_debug("Event: DB_EV_TRACKINFOCHANGED");
-            sni_update_tooltip(-1);
+        if (sni_flag_get(SNI_FLAG_LOADED)) {
+            if (p1 == DDB_PLAYLIST_CHANGE_CONTENT) {
+                g_debug("Event: DB_EV_TRACKINFOCHANGED");
+                sni_update_tooltip(-1);
+            }
         }
         break;
 

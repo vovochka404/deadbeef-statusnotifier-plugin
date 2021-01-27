@@ -108,7 +108,7 @@ sni_get_coverart(DB_playItem_t *track) {
         album = get_track_info(track, "title");
     }
 #if (DDB_GTKUI_API_LEVEL >= 202)
-    GdkPixbuf *buf = gtkui_plugin->get_cover_art_primary(uri, artist, album, 128, NULL, NULL);
+    GdkPixbuf *buf = gtkui_plugin->get_cover_art_thumb(uri, artist, album, 128, NULL, NULL);
 #else
     GdkPixbuf *buf = gtkui_plugin->get_cover_art_pixbuf(uri, artist, album, 128, NULL, NULL);
 #endif
@@ -130,11 +130,12 @@ sni_set_tooltip_html(DB_playItem_t *track, int state) {
     gchar title_body[TOOLTIP_MAX_LENGTH];
     sni_get_tooltip(track, state, _(TOOLTIP_FORMAT), title_body, TOOLTIP_MAX_LENGTH);
 
-    if (deadbeef->conf_get_int("sni.tooltip_enable_icon", 1)) {
+    if ((deadbeef->conf_get_int("sni.tooltip_enable_icon", 1)) &&
+        (state == DDB_PLAYBACK_STATE_PLAYING)) {
         GdkPixbuf *pic = sni_get_coverart(track);
         if (pic) {
-            status_notifier_set_tooltip(icon, NULL, TOOLTIP_DEFAULT_TITLE, title_body);
-            status_notifier_set_from_pixbuf(icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic);
+//            printf("Pixbuf: %zu\n", gdk_pixbuf_get_byte_length(pic));
+            status_notifier_set_tooltip2(icon, pic, TOOLTIP_DEFAULT_TITLE, title_body);
             g_object_unref(pic);
         } else {
             status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, title_body);
