@@ -100,7 +100,7 @@ sni_get_tooltip(DB_playItem_t *track, int state, const gchar *fmt, gchar *buf, s
 }
 
 static inline GdkPixbuf *
-sni_get_coverart(DB_playItem_t *track) {
+sni_get_coverart(DB_playItem_t *track, void (*callback)(void *)) {
     const char *uri = get_track_info(track, ":URI");
     const char *artist = get_track_artist(track);
     const char *album = get_track_info(track, "album");
@@ -108,7 +108,8 @@ sni_get_coverart(DB_playItem_t *track) {
         album = get_track_info(track, "title");
     }
 #if (DDB_GTKUI_API_LEVEL >= 202)
-    GdkPixbuf *buf = gtkui_plugin->get_cover_art_thumb(uri, artist, album, 128, NULL, NULL);
+    GdkPixbuf *buf = gtkui_plugin->get_cover_art_thumb(uri, artist, album, 128, callback,
+                                                       (callback) ? (void *)icon : NULL);
 #else
     GdkPixbuf *buf = gtkui_plugin->get_cover_art_pixbuf(uri, artist, album, 128, NULL, NULL);
 #endif
@@ -116,6 +117,30 @@ sni_get_coverart(DB_playItem_t *track) {
         buf = gtkui_plugin->cover_get_default_pixbuf();
 
     return buf;
+}
+
+static void
+callback_pixbuf_lazy_loading(void *ctx) {
+    StatusNotifier *icon = (StatusNotifier *)ctx;
+
+    DB_playItem_t *track = deadbeef->streamer_get_playing_track();
+    if (track) {
+        GdkPixbuf *pic = sni_get_coverart(track, NULL);
+        if (pic) {
+            g_debug("Pixbuf callback: %zu\n", gdk_pixbuf_get_byte_length(pic));
+            status_notifier_set_from_pixbuf(icon, STATUS_NOTIFIER_TOOLTIP_ICON, pic);
+            g_object_unref(pic);
+        }
+        deadbeef->pl_item_unref(track);
+    }
+}
+
+static void
+pixbuf_lazy_load(void *ctx) {
+    StatusNotifier *icon = (StatusNotifier *)ctx;
+    if (icon == NULL)
+        return;
+    deadbeef->thread_start(callback_pixbuf_lazy_loading, (void *)icon);
 }
 
 static inline void
@@ -131,10 +156,10 @@ sni_set_tooltip_html(DB_playItem_t *track, int state) {
     sni_get_tooltip(track, state, _(TOOLTIP_FORMAT), title_body, TOOLTIP_MAX_LENGTH);
 
     if ((deadbeef->conf_get_int("sni.tooltip_enable_icon", 1)) &&
-        (state == DDB_PLAYBACK_STATE_PLAYING)) {
-        GdkPixbuf *pic = sni_get_coverart(track);
+        ((state == DDB_PLAYBACK_STATE_PLAYING) || (state == DDB_PLAYBACK_STATE_PAUSED))) {
+        GdkPixbuf *pic = sni_get_coverart(track, pixbuf_lazy_load);
         if (pic) {
-            //            printf("Pixbuf: %zu\n", gdk_pixbuf_get_byte_length(pic));
+            g_debug("Pixbuf cached: %zu\n", gdk_pixbuf_get_byte_length(pic));
             status_notifier_set_tooltip2(icon, pic, TOOLTIP_DEFAULT_TITLE, title_body);
             g_object_unref(pic);
         } else {
