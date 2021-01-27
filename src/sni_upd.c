@@ -216,14 +216,14 @@ sni_update_status(int state) {
         return;
     if (!icon)
         return;
-
-    g_debug("sni_update_status, status: %d", state);
-    DbusmenuMenuitem *stop_item;
-
-    int out_state = (state < 0) ? playback_state_active_waiting() : state;
+    // clang-format off
+    int out_state = (state < 0) ? playback_state_active_waiting()
+                                : state;
+    // clang-format on
     if (out_state >= 0) {
-
+        DbusmenuMenuitem *stop_item;
         int enable_overlay = deadbeef->conf_get_int("sni.enable_overlay", 1);
+
         switch (out_state) {
         case DDB_PLAYBACK_STATE_PLAYING:
             if (enable_overlay)
@@ -234,12 +234,14 @@ sni_update_status(int state) {
 
             sni_toggle_play_pause(SNI_STATE_TOOGLE_PLAY);
             break;
+
         case DDB_PLAYBACK_STATE_PAUSED:
             if (enable_overlay)
                 status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON,
                                                    "media-playback-pause");
             sni_toggle_play_pause(SNI_STATE_TOOGLE_PAUSE);
             break;
+
         case DDB_PLAYBACK_STATE_STOPPED:
             if (enable_overlay)
                 status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON, NULL);

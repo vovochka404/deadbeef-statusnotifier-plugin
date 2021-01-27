@@ -108,15 +108,20 @@ callback_wait_notifier_register(void *ctx) {
 
     status_notifier_register(sni_ctx);
 
-    uint32_t wait_time = deadbeef->conf_get_int("sni.waiting_sec", 30);
+    uint32_t wait_time = deadbeef->conf_get_int("sni.waiting_load_sec", 30);
     for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
-            //            sleep(5);
-
             sni_flag_set(SNI_FLAG_LOADED);
-            sni_update_status(-1);
 
+            /* FIXME Hotfix
+             * When restoring the playback status at startup, it is impossible to reliably determine
+             * the playback status (play/pause/stop) due to the different loading times of the
+             * core and the StatusNotifier.
+             */
+            sleep(deadbeef->conf_get_int("sni.waiting_playback_sec", 5));
+
+            sni_update_status(-1);
             deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s: %s\n",
                                    "Status notifier register success",
                                    status_notifier_get_id(sni_ctx));
@@ -128,7 +133,7 @@ callback_wait_notifier_register(void *ctx) {
                                    status_notifier_get_id(sni_ctx));
             return;
         }
-        sleep(1);
+        sleep(1); // Timer tick
     }
     deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_DEFAULT, "%s: %s\n",
                            "Status notifier register failed (by timeout)",
@@ -334,8 +339,9 @@ static const char settings_dlg[] =
 
     "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
-
-    "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_sec 30;\n"
+    
+    "property \"Waiting for a track to load (sec.)\" spinbtn[1,10,1] sni.waiting_playback_sec 5;\n"
+    "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_load_sec 30;\n"
 ;
 // clang-format on
 
