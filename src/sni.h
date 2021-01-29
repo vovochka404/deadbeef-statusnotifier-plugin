@@ -71,6 +71,12 @@ typedef enum {
     SNI_FLAG_LOADED = 1 << 1,
 } SNIFlags;
 
+enum {
+    SNI_STATE_TOOGLE_PLAY = 0,
+    SNI_STATE_TOOGLE_PAUSE = 1,
+    SNI_STATE_TOOGLE_STOP = 2,
+};
+
 DbusmenuMenuitem *
 get_context_menu(void);
 
@@ -81,7 +87,7 @@ void
 update_playback_controls(void);
 
 void
-deadbeef_toggle_play_pause(void);
+update_play_controls(int play);
 
 gboolean
 deadbeef_preferences_available(void);

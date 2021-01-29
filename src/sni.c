@@ -22,11 +22,6 @@
 
 #include "sni.h"
 
-enum {
-    SNI_STATE_TOOGLE_PLAY = 0,
-    SNI_STATE_TOOGLE_PAUSE = 1,
-};
-
 static StatusNotifier *icon = NULL;
 
 static DB_plugin_action_t *toggle_mainwindow_action = NULL;
@@ -42,8 +37,8 @@ deadbeef_get_instance(void) {
     return deadbeef;
 }
 
-static void
-sni_toggle_play_pause(int play); // forward initialization
+void
+deadbeef_toggle_play_pause(void);
 
 #include "sni_flags.c"
 #include "sni_upd.c"
@@ -112,7 +107,6 @@ callback_wait_notifier_register(void *ctx) {
     for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
-            sni_flag_set(SNI_FLAG_LOADED);
 
             /* FIXME Hotfix
              * When restoring the playback status at startup, it is impossible to reliably determine
@@ -120,6 +114,7 @@ callback_wait_notifier_register(void *ctx) {
              * core and the StatusNotifier.
              */
             sleep(deadbeef->conf_get_int("sni.waiting_playback_sec", 5));
+            sni_flag_set(SNI_FLAG_LOADED);
 
             sni_update_status(-1);
             deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s: %s\n",
@@ -166,31 +161,6 @@ sni_enable(int enable) {
     } else {
         g_object_unref(icon);
         icon = NULL;
-    }
-}
-
-static void
-sni_toggle_play_pause(int play) {
-    static int play_pause_state = SNI_STATE_TOOGLE_PAUSE;
-    DbusmenuMenuitem *play_item;
-
-    if ((play_pause_state && play) || (!play_pause_state && !play))
-        return;
-
-    play_item = get_context_menu_item(SNI_MENU_ITEM_PLAY);
-
-    if (play_pause_state && !play) {
-        dbusmenu_menuitem_property_set(play_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Pause"));
-        dbusmenu_menuitem_property_set(play_item, DBUSMENU_MENUITEM_PROP_ICON_NAME,
-                                       "media-playback-pause");
-
-        play_pause_state = SNI_STATE_TOOGLE_PLAY;
-    } else {
-        dbusmenu_menuitem_property_set(play_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Play"));
-        dbusmenu_menuitem_property_set(play_item, DBUSMENU_MENUITEM_PROP_ICON_NAME,
-                                       "media-playback-start");
-
-        play_pause_state = SNI_STATE_TOOGLE_PAUSE;
     }
 }
 

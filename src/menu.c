@@ -54,7 +54,7 @@ typedef struct {
         DbusmenuMenuitem *active_now; // now playback state
     } pb_loop;
 
-    uintptr_t pb_lock;
+    uintptr_t mlock;
 } sni_menu_t;
 
 static sni_menu_t *sm = NULL;
@@ -165,12 +165,46 @@ update_playback_controls(void) {
     if ((sm == NULL) || (sm->pb_menu == NULL))
         return;
 
-    deadbeef->mutex_lock(sm->pb_lock);
+    deadbeef->mutex_lock(sm->mlock);
 
     update_playback_orders(deadbeef->conf_get_int("playback.order", 0));
     update_playback_loops(deadbeef->conf_get_int("playback.loop", 0));
 
-    deadbeef->mutex_unlock(sm->pb_lock);
+    deadbeef->mutex_unlock(sm->mlock);
+}
+
+void
+update_play_controls(int play) {
+
+    static int play_state = SNI_STATE_TOOGLE_PAUSE;
+
+    if (play_state == play)
+        return;
+
+    deadbeef->mutex_lock(sm->mlock);
+
+    play_state = play;
+    switch (play) {
+    case SNI_STATE_TOOGLE_PLAY:
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_LABEL, _("Pause"));
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_ICON_NAME,
+                                       "media-playback-pause");
+        dbusmenu_menuitem_property_set_bool(sm->item_stop, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+        break;
+    case SNI_STATE_TOOGLE_STOP:
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_LABEL, _("Play"));
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_ICON_NAME,
+                                       "media-playback-start");
+        dbusmenu_menuitem_property_set_bool(sm->item_stop, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
+        break;
+    case SNI_STATE_TOOGLE_PAUSE:
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_LABEL, _("Play"));
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_ICON_NAME,
+                                       "media-playback-start");
+        break;
+    }
+
+    deadbeef->mutex_unlock(sm->mlock);
 }
 
 static DbusmenuMenuitem *
@@ -331,8 +365,8 @@ sni_context_menu_create(void) {
     if (sm == NULL)
         return -1;
 
-    sm->pb_lock = deadbeef->mutex_create();
-    if (sm->pb_lock) {
+    sm->mlock = deadbeef->mutex_create();
+    if (sm->mlock) {
         create_context_menu();
     } else {
         sni_free_null(sm);
@@ -345,7 +379,7 @@ sni_context_menu_create(void) {
 void
 sni_context_menu_release(void) {
     if (sm) {
-        deadbeef->mutex_free(sm->pb_lock);
+        deadbeef->mutex_free(sm->mlock);
         sni_free_null(sm);
     }
 }

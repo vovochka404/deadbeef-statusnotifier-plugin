@@ -221,7 +221,6 @@ sni_update_status(int state) {
                                 : state;
     // clang-format on
     if (out_state >= 0) {
-        DbusmenuMenuitem *stop_item;
         int enable_overlay = deadbeef->conf_get_int("sni.enable_overlay", 1);
 
         switch (out_state) {
@@ -229,26 +228,20 @@ sni_update_status(int state) {
             if (enable_overlay)
                 status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON,
                                                    "media-playback-start");
-            stop_item = get_context_menu_item(SNI_MENU_ITEM_STOP);
-            dbusmenu_menuitem_property_set_bool(stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
-
-            sni_toggle_play_pause(SNI_STATE_TOOGLE_PLAY);
+            update_play_controls(SNI_STATE_TOOGLE_PLAY);
             break;
 
         case DDB_PLAYBACK_STATE_PAUSED:
             if (enable_overlay)
                 status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON,
                                                    "media-playback-pause");
-            sni_toggle_play_pause(SNI_STATE_TOOGLE_PAUSE);
+            update_play_controls(SNI_STATE_TOOGLE_PAUSE);
             break;
 
         case DDB_PLAYBACK_STATE_STOPPED:
             if (enable_overlay)
                 status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON, NULL);
-            stop_item = get_context_menu_item(SNI_MENU_ITEM_STOP);
-            dbusmenu_menuitem_property_set_bool(stop_item, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
-
-            sni_toggle_play_pause(SNI_STATE_TOOGLE_PAUSE);
+            update_play_controls(SNI_STATE_TOOGLE_STOP);
             break;
         }
     }
