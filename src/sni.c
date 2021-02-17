@@ -97,6 +97,18 @@ on_scroll_requested(StatusNotifier *sn, int diff, StatusNotifierScrollOrientatio
     deadbeef->volume_set_db(vol);
 }
 
+/* Protection against manual configuration changes */
+static inline int
+get_gtkui_refresh_rate(void) {
+    int fps = deadbeef->conf_get_int("gtkui.refresh_rate", 10);
+    if (fps < 1) {
+        fps = 1;
+    } else if (fps > 30) {
+        fps = 30;
+    }
+    return fps;
+}
+
 static void
 callback_wait_notifier_register(void *ctx) {
     StatusNotifierState state = STATUS_NOTIFIER_STATE_NOT_REGISTERED;
@@ -113,7 +125,7 @@ callback_wait_notifier_register(void *ctx) {
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
 
             sni_flag_set(SNI_FLAG_LOADED);
-            sni_timer_init(icon, 1000 / deadbeef->conf_get_int("gtkui.refresh_rate", 10));
+            sni_timer_init(icon, 1000 / get_gtkui_refresh_rate());
 
             deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s: %s\n",
                                    "Status notifier register success",
