@@ -42,6 +42,7 @@ deadbeef_toggle_play_pause(void);
 
 #include "sni_flags.c"
 #include "sni_upd.c"
+#include "sni_timer.c"
 #include "x11-force-focus.c"
 
 static void
@@ -99,7 +100,10 @@ on_scroll_requested(StatusNotifier *sn, int diff, StatusNotifierScrollOrientatio
 static void
 callback_wait_notifier_register(void *ctx) {
     StatusNotifierState state = STATUS_NOTIFIER_STATE_NOT_REGISTERED;
+
     StatusNotifier *sni_ctx = (StatusNotifier *)ctx;
+    if (sni_ctx == NULL)
+        return;
 
     status_notifier_register(sni_ctx);
 
@@ -116,7 +120,8 @@ callback_wait_notifier_register(void *ctx) {
             sleep(deadbeef->conf_get_int("sni.waiting_playback_sec", 5));
             sni_flag_set(SNI_FLAG_LOADED);
 
-            sni_update_status(-1);
+            sni_timer_init(icon, 1000 / deadbeef->conf_get_int("gtkui.refresh_rate", 10));
+
             deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s: %s\n",
                                    "Status notifier register success",
                                    status_notifier_get_id(sni_ctx));
@@ -160,6 +165,7 @@ sni_enable(int enable) {
                                    "DBus menu don't create");
     } else {
         g_object_unref(icon);
+        sni_timer_free();
         icon = NULL;
     }
 }
@@ -226,20 +232,20 @@ sni_message(uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
         if (sni_flag_get(SNI_FLAG_LOADED))
             update_playback_controls();
         break;
-    case DB_EV_PAUSED:
-        g_debug("Event: DB_EV_PAUSED");
-        (p1) ? sni_update_status(DDB_PLAYBACK_STATE_PAUSED)
-             : sni_update_status(DDB_PLAYBACK_STATE_PLAYING);
-        break;
-    case DB_EV_SONGCHANGED: {
-        ddb_event_trackchange_t *ev_change = (ddb_event_trackchange_t *)ctx;
-        if (ev_change->to == NULL) {
-            g_debug("Event: DB_EV_SONGCHANGED");
-            sni_update_status(DDB_PLAYBACK_STATE_STOPPED);
-        } else {
-            sni_update_status(DDB_PLAYBACK_STATE_PLAYING);
-        }
-    } break;
+        /*    case DB_EV_PAUSED:
+                g_debug("Event: DB_EV_PAUSED");
+                (p1) ? sni_update_status(DDB_PLAYBACK_STATE_PAUSED)
+                     : sni_update_status(DDB_PLAYBACK_STATE_PLAYING);
+                break;
+            case DB_EV_SONGCHANGED: {
+                ddb_event_trackchange_t *ev_change = (ddb_event_trackchange_t *)ctx;
+                if (ev_change->to == NULL) {
+                    g_debug("Event: DB_EV_SONGCHANGED");
+                    sni_update_status(DDB_PLAYBACK_STATE_STOPPED);
+                } else {
+                    sni_update_status(DDB_PLAYBACK_STATE_PLAYING);
+                }
+            } break; */
     }
     return 0;
 }
@@ -289,7 +295,7 @@ sni_disconnect() {
         deadbeef->conf_set_int("gtkui.hide_tray_icon", 0);
     }
     if (icon)
-        g_object_unref(icon);
+        sni_enable(0);
 
     return 0;
 }
@@ -310,7 +316,7 @@ static const char settings_dlg[] =
     "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
     
-    "property \"Waiting for a track to load (sec.)\" spinbtn[1,10,1] sni.waiting_playback_sec 5;\n"
+/*    "property \"Waiting for a track to load (sec.)\" spinbtn[1,10,1] sni.waiting_playback_sec 5;\n" */
     "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_load_sec 30;\n"
 ;
 // clang-format on
