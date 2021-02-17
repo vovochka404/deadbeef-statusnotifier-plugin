@@ -3,16 +3,31 @@
 typedef struct {
     StatusNotifier *icon;
 
+    unsigned playback;
+    DB_playItem_t *item;
+
     guint timer;
-    uintptr_t lock;
 } sni_state_t;
 
 static sni_state_t *sni_state = NULL;
 
 void
-sni_update_info(sni_state_t *st, int state) {
-    // TODO FIXME Reduce more changes
-    sni_update_status(state);
+sni_update_info(sni_state_t *st, unsigned state) {
+
+    DB_playItem_t *tmp = deadbeef->streamer_get_playing_track();
+
+    if ((st->playback != state) || (st->item != tmp)) {
+        st->playback = state;
+        if (st->item)
+            deadbeef->pl_item_unref(st->item);
+        st->item = tmp;
+
+        g_debug("Update status. State: %u\tItem:%p\n", st->playback, st->item);
+        sni_update_status(state);
+    } else {
+        if (tmp)
+            deadbeef->pl_item_unref(tmp);
+    }
 }
 
 static gboolean
@@ -49,13 +64,6 @@ sni_timer_init(StatusNotifier *icon, guint interval) {
             return -1;
 
         sni_state->icon = icon;
-
-        sni_state->lock = deadbeef->mutex_create();
-        if (sni_state->lock == 0) {
-            sni_free_null(sni_state);
-            return -1;
-        }
-
         // clang-format off
         sni_state->timer = g_timeout_add_full( G_PRIORITY_DEFAULT, interval,
                                                callback_timer_status_update,
@@ -69,7 +77,10 @@ void
 sni_timer_free(void) {
     if (sni_state) {
         g_source_remove(sni_state->timer);
-        deadbeef->mutex_free(sni_state->lock);
+
+        if (sni_state->item)
+            deadbeef->pl_item_unref(sni_state->item);
+
         sni_free_null(sni_state);
     }
 }

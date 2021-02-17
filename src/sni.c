@@ -299,10 +299,10 @@ static DB_misc_t plugin = {
     .plugin.version_minor = 4,
 #if GTK_CHECK_VERSION(3, 0, 0)
     .plugin.id = "sni_gtk3",
-    .plugin.name = "Status Notifier for GTK3 UI",
+    .plugin.name = "Status Notifier GTK3 UI",
 #else
     .plugin.id = "sni_gtk2",
-    .plugin.name = "Status Notifier for GTK2 UI",
+    .plugin.name = "Status Notifier GTK2 UI",
 #endif
     .plugin.descr = "StatusNotifierItem for DE without support for xembedded icons\n"
                     "(like plasma5 or GNOME3). It also can be used for a better look&feel "
