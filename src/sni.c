@@ -112,14 +112,7 @@ callback_wait_notifier_register(void *ctx) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
 
-            /* FIXME Hotfix
-             * When restoring the playback status at startup, it is impossible to reliably determine
-             * the playback status (play/pause/stop) due to the different loading times of the
-             * core and the StatusNotifier.
-             */
-            sleep(deadbeef->conf_get_int("sni.waiting_playback_sec", 5));
             sni_flag_set(SNI_FLAG_LOADED);
-
             sni_timer_init(icon, 1000 / deadbeef->conf_get_int("gtkui.refresh_rate", 10));
 
             deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s: %s\n",
@@ -141,7 +134,7 @@ callback_wait_notifier_register(void *ctx) {
 }
 
 static void
-sni_enable(int enable) {
+sni_reload_icon(gboolean enable) {
     if ((icon && enable) || (!icon && !enable))
         return;
 
@@ -212,10 +205,15 @@ deadbeef_help_activate(void) {
 
 static void
 sni_configchanged(void) {
-    int enabled = deadbeef->conf_get_int("sni.enabled", 1);
-    int check_std_icon = deadbeef->conf_get_int("sni.check_std_icon", 1);
-    int hide_tray_icon = deadbeef->conf_get_int("gtkui.hide_tray_icon", 0);
-    sni_enable(enabled && ((check_std_icon && hide_tray_icon) || !check_std_icon));
+    if (deadbeef->conf_get_int("sni.enabled", 1)) {
+        sni_flag_set(SNI_FLAG_ENABLED);
+        deadbeef->conf_set_int("gtkui.hide_tray_icon", 1);
+    } else {
+        sni_flag_unset(SNI_FLAG_ENABLED);
+        deadbeef->conf_set_int("gtkui.hide_tray_icon", 0);
+    }
+
+    sni_reload_icon(sni_flag_get(SNI_FLAG_ENABLED));
 }
 
 static int
@@ -232,20 +230,6 @@ sni_message(uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
         if (sni_flag_get(SNI_FLAG_LOADED))
             update_playback_controls();
         break;
-        /*    case DB_EV_PAUSED:
-                g_debug("Event: DB_EV_PAUSED");
-                (p1) ? sni_update_status(DDB_PLAYBACK_STATE_PAUSED)
-                     : sni_update_status(DDB_PLAYBACK_STATE_PLAYING);
-                break;
-            case DB_EV_SONGCHANGED: {
-                ddb_event_trackchange_t *ev_change = (ddb_event_trackchange_t *)ctx;
-                if (ev_change->to == NULL) {
-                    g_debug("Event: DB_EV_SONGCHANGED");
-                    sni_update_status(DDB_PLAYBACK_STATE_STOPPED);
-                } else {
-                    sni_update_status(DDB_PLAYBACK_STATE_PLAYING);
-                }
-            } break; */
     }
     return 0;
 }
@@ -276,35 +260,21 @@ sni_connect() {
                                "sni: failed to find \"toggle_player_window\" gtkui plugin\n");
     }
 
-    int enabled = deadbeef->conf_get_int("sni.enabled", 1);
-    int enable_automaticaly = deadbeef->conf_get_int("sni.enable_automaticaly", 1);
-    int hide_tray_icon = deadbeef->conf_get_int("gtkui.hide_tray_icon", 0);
-
-    if (enabled && enable_automaticaly && !hide_tray_icon) {
-        sni_flag_set(SNI_FLAG_AUTOED);
-        deadbeef->conf_set_int("gtkui.hide_tray_icon", 1);
-    } else
-        sni_configchanged();
+    sni_configchanged();
 
     return 0;
 }
 
 static int
 sni_disconnect() {
-    if (sni_flag_get(SNI_FLAG_AUTOED)) {
-        deadbeef->conf_set_int("gtkui.hide_tray_icon", 0);
-    }
-    if (icon)
-        sni_enable(0);
-
+    if (sni_flag_get(SNI_FLAG_ENABLED))
+        sni_reload_icon(FALSE);
     return 0;
 }
 
 // clang-format off
 static const char settings_dlg[] =
     "property \"Enable Status Notifier\" checkbox sni.enabled 1;\n"
-    "property \"Allow only if standart GUI tray icon is disabled\" checkbox sni.check_std_icon 1;\n"
-    "property \"Automaticly disable standart GUI tray icon\" checkbox sni.enable_automaticaly 1;\n"
 
     "property \"Display playback status on icon (if DE support overlay icons)\" checkbox sni.enable_overlay 1;\n"
     "property \"Display Status Notifier tooltip (if DE support this)\" checkbox sni.enable_tooltip 1;\n"
@@ -316,7 +286,6 @@ static const char settings_dlg[] =
     "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
     
-/*    "property \"Waiting for a track to load (sec.)\" spinbtn[1,10,1] sni.waiting_playback_sec 5;\n" */
     "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_load_sec 30;\n"
 ;
 // clang-format on

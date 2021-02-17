@@ -67,7 +67,7 @@ typedef enum {
 } SNIContextMenuItemType;
 
 typedef enum {
-    SNI_FLAG_AUTOED = 1 << 0,
+    SNI_FLAG_ENABLED = 1 << 0,
     SNI_FLAG_LOADED = 1 << 1,
 } SNIFlags;
 
