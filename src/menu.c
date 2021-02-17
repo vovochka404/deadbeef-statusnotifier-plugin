@@ -201,6 +201,7 @@ update_play_controls(int play) {
         dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_LABEL, _("Play"));
         dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_ICON_NAME,
                                        "media-playback-start");
+        dbusmenu_menuitem_property_set_bool(sm->item_stop, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
         break;
     }
 
