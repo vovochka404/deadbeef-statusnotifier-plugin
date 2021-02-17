@@ -6,7 +6,9 @@ This plugin aims to implement the StatusNotifierItem for DeaDBeeF.
 
 It tends to replace default tray icon on DE that supports StatusNotifierIitem protocol.
 It also aims to provide tray icon for deadbeef on DE where old xmbedded icons aren't supported anymore, such as KDE Plasma 5, Cinnamon, GNOME3.
+
 __WARNING!__ GNOME3 supported using the [Appindictor Extension](https://github.com/ubuntu/gnome-shell-extension-appindicator) or similar.
+
 __WARNING!__ Cinnamon supported using the XAppStatusIcons extension
 
 #### Known DE comptibilty bugs
@@ -26,10 +28,12 @@ If you know how to fix certain bugs, patches are welcome.
 
 #### openSUSE
 You will need to add [packman](http://packman.links2linux.org/) repository for deadbeef itself (probably you already done this :) ).
+
 `sudo zypper in cmake deadbeef-devel libdbusmenu-glib-devel gtk3-devel`
 
 #### Fedora
 You will need to find any [repository](https://copr.fedorainfracloud.org/coprs/fulltext/?fulltext=deadbeef) with for deadbeef itself and add it to your system (probably you already done this :) ).
+
 `sudo yum install cmake deadbeef-devel libdbusmenu-devel gtk3-devel`
 
 #### Debian/Ubuntu
