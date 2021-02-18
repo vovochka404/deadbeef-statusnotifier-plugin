@@ -169,8 +169,8 @@ sni_reload_icon(gboolean enable) {
             deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s\n",
                                    "DBus menu don't create");
     } else {
-        g_object_unref(icon);
         sni_timer_free();
+        g_object_unref(icon);
         icon = NULL;
     }
 }

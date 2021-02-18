@@ -181,31 +181,24 @@ sni_update_tooltip(int state) {
     if (deadbeef->conf_get_int("sni.enable_tooltip", 0) == 0)
         return;
 
-    g_debug("sni_update_tooltip, status: %d", state);
+    switch (state) {
+    case DDB_PLAYBACK_STATE_STOPPED:
+        status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, _("Stopped"));
+        break;
+    case DDB_PLAYBACK_STATE_PAUSED:
+    case DDB_PLAYBACK_STATE_PLAYING: {
+        DB_playItem_t *track = deadbeef->streamer_get_playing_track();
+        if (track) {
+            deadbeef->conf_get_int("sni.tooltip_plain_text", 0)
+                ? sni_set_tooltip_textonly(track, state)
+                : sni_set_tooltip_html(track, state);
 
-    int out_state = (state < 0) ? playback_state_active_waiting() : state;
-    if (out_state >= 0) {
-        switch (out_state) {
-        case DDB_PLAYBACK_STATE_STOPPED:
-            status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, _("Stopped"));
-            break;
-        case DDB_PLAYBACK_STATE_PAUSED:
-        case DDB_PLAYBACK_STATE_PLAYING: {
-            DB_playItem_t *track = deadbeef->streamer_get_playing_track();
-            if (track) {
-                deadbeef->conf_get_int("sni.tooltip_plain_text", 0)
-                    ? sni_set_tooltip_textonly(track, out_state)
-                    : sni_set_tooltip_html(track, out_state);
-
-                deadbeef->pl_item_unref(track);
-            } else {
-                status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, _("Playing"));
-            }
-            break;
+            deadbeef->pl_item_unref(track);
+        } else {
+            status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, _("Playing"));
         }
-        }
-    } else {
-        status_notifier_set_tooltip(icon, "deadbeef", TOOLTIP_DEFAULT_TITLE, NULL);
+        break;
+    }
     }
 }
 
@@ -216,34 +209,28 @@ sni_update_status(int state) {
         return;
     if (!icon)
         return;
-    // clang-format off
-    int out_state = (state < 0) ? playback_state_active_waiting()
-                                : state;
-    // clang-format on
-    if (out_state >= 0) {
-        int enable_overlay = deadbeef->conf_get_int("sni.enable_overlay", 1);
+    int enable_overlay = deadbeef->conf_get_int("sni.enable_overlay", 1);
 
-        switch (out_state) {
-        case DDB_PLAYBACK_STATE_PLAYING:
-            if (enable_overlay)
-                status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON,
-                                                   "media-playback-start");
-            update_play_controls(SNI_STATE_TOOGLE_PLAY);
-            break;
+    switch (state) {
+    case DDB_PLAYBACK_STATE_PLAYING:
+        if (enable_overlay)
+            status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON,
+                                               "media-playback-start");
+        update_play_controls(SNI_STATE_TOOGLE_PLAY);
+        break;
 
-        case DDB_PLAYBACK_STATE_PAUSED:
-            if (enable_overlay)
-                status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON,
-                                                   "media-playback-pause");
-            update_play_controls(SNI_STATE_TOOGLE_PAUSE);
-            break;
+    case DDB_PLAYBACK_STATE_PAUSED:
+        if (enable_overlay)
+            status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON,
+                                               "media-playback-pause");
+        update_play_controls(SNI_STATE_TOOGLE_PAUSE);
+        break;
 
-        case DDB_PLAYBACK_STATE_STOPPED:
-            if (enable_overlay)
-                status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON, NULL);
-            update_play_controls(SNI_STATE_TOOGLE_STOP);
-            break;
-        }
+    case DDB_PLAYBACK_STATE_STOPPED:
+        if (enable_overlay)
+            status_notifier_set_from_icon_name(icon, STATUS_NOTIFIER_OVERLAY_ICON, NULL);
+        update_play_controls(SNI_STATE_TOOGLE_STOP);
+        break;
     }
-    sni_update_tooltip(out_state);
+    sni_update_tooltip(state);
 }

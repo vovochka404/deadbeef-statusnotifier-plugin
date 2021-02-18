@@ -28,18 +28,18 @@ typedef struct {
 
 static sni_flags_t sni_flags = {0};
 
-static inline gboolean
+gboolean
 sni_flag_get(uint32_t code) {
     gboolean ret = (sni_flags.v1 & ((uint32_t)1 << code));
     return ret;
 }
 
-static inline void
+void
 sni_flag_set(uint32_t code) {
     sni_flags.v1 |= ((uint32_t)1 << code);
 }
 
-static inline void
+void
 sni_flag_unset(uint32_t code) {
     sni_flags.v1 &= ~((uint32_t)1 << code);
 }
