@@ -6,15 +6,15 @@
  *
  * This file is part of deadbeef-statusnotifier-plugin.
  *
- * deadbeef-statusnotifier-plugin is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * deadbeef-statusnotifier-plugin is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * deadbeef-statusnotifier-plugin is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * deadbeef-statusnotifier-plugin is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
  *
  * You should have received a copy of the GNU General Public License along with
  * deadbeef-statusnotifier-plugin. If not, see http://www.gnu.org/licenses/
@@ -24,20 +24,20 @@
 #define SNI_H
 
 #if ENABLE_NLS
-
-#include <libintl.h>
+    #include <libintl.h>
     #define PACKAGE "deadbeef"
     #define _(String) dgettext(PACKAGE, String)
 #else
     #define _(String) (String)
 #endif
 
-#if defined(__GNUC__) || __has_attribute(visibility)
+#if defined(__GNUC__) && __GNUC__ >= 4
     #define SNI_EXPORT_FUNC __attribute__((visibility("default")))
 #else
     #define SNI_EXPORT_FUNC
 #endif
 
+#include <stdlib.h>
 
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/menuitem.h>
@@ -47,7 +47,8 @@
 
 #include <extras/statusnotifier/src/statusnotifier.h>
 
-DB_functions_t * deadbeef_get_instance (void);
+DB_functions_t *
+deadbeef_get_instance(void);
 
 typedef enum {
     SNI_MENU_ITEM_PLAY,
@@ -59,33 +60,57 @@ typedef enum {
 } SNIContextMenuItem;
 
 typedef enum {
-	SNI_MENU_ITEM_TYPE_COMMON,
-	SNI_MENU_ITEM_TYPE_CHECKBOX,
-	SNI_MENU_ITEM_TYPE_RADIO,
-	SNI_MENU_ITEM_TYPE_SEPARATOR
+    SNI_MENU_ITEM_TYPE_COMMON,
+    SNI_MENU_ITEM_TYPE_CHECKBOX,
+    SNI_MENU_ITEM_TYPE_RADIO,
+    SNI_MENU_ITEM_TYPE_SEPARATOR
 } SNIContextMenuItemType;
 
 typedef enum {
-    SNI_FLAG_AUTOED = 1 << 0,
+    SNI_FLAG_ENABLED = 1 << 0,
     SNI_FLAG_LOADED = 1 << 1,
 } SNIFlags;
 
-DbusmenuMenuitem *
-get_context_menu (void);
+enum {
+    SNI_STATE_TOOGLE_PLAY = 0,
+    SNI_STATE_TOOGLE_PAUSE = 1,
+    SNI_STATE_TOOGLE_STOP = 2,
+};
 
 DbusmenuMenuitem *
-get_context_menu_item (SNIContextMenuItem item);
+get_context_menu(void);
+
+DbusmenuMenuitem *
+get_context_menu_item(SNIContextMenuItem item);
 
 void
-update_playback_controls (void);
+update_playback_controls(void);
 
 void
-deadbeef_toggle_play_pause (void);
+update_play_controls(int play);
 
 gboolean
-deadbeef_preferences_available (void);
+deadbeef_preferences_available(void);
 
 void
-deadbeef_preferences_activate (void);
+deadbeef_preferences_activate(void);
+
+gboolean
+deadbeef_help_available(void);
+
+void
+deadbeef_help_activate(void);
+
+int
+sni_context_menu_create(void);
+
+void
+sni_context_menu_release(void);
+
+#define sni_free_null(X)                                                                           \
+    do {                                                                                           \
+        free(X);                                                                                   \
+        X = NULL;                                                                                  \
+    } while (0);
 
 #endif

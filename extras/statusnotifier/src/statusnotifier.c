@@ -1417,6 +1417,24 @@ status_notifier_set_tooltip (StatusNotifier          *sn,
     status_notifier_thaw_tooltip (sn);
 }
 
+void
+status_notifier_set_tooltip2 (StatusNotifier          *sn,
+                              GdkPixbuf               *pixbuf,
+                              const gchar             *title,
+                              const gchar             *body)
+{
+    StatusNotifierPrivate *priv;
+
+    g_return_if_fail (IS_STATUS_NOTIFIER (sn));
+    priv = sn->priv;
+
+    ++priv->tooltip_freeze;
+    status_notifier_set_from_pixbuf (sn, STATUS_NOTIFIER_TOOLTIP_ICON, pixbuf);
+    status_notifier_set_tooltip_title (sn, title);
+    status_notifier_set_tooltip_body (sn, body);
+    status_notifier_thaw_tooltip (sn);
+}
+
 /**
  * status_notifier_set_tooltip_title:
  * @sn: A #StatusNotifier

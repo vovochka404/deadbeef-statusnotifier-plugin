@@ -6,279 +6,381 @@
  *
  * This file is part of deadbeef-statusnotifier-plugin.
  *
- * deadbeef-statusnotifier-plugin is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * deadbeef-statusnotifier-plugin is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * deadbeef-statusnotifier-plugin is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ * deadbeef-statusnotifier-plugin is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
  *
  * You should have received a copy of the GNU General Public License along with
  * deadbeef-statusnotifier-plugin. If not, see http://www.gnu.org/licenses/
  */
 
-
 #include "sni.h"
 
-DbusmenuMenuitem *menu;
-DbusmenuMenuitem *quit_item;
-DbusmenuMenuitem *play_item;
-DbusmenuMenuitem *stop_item;
-DbusmenuMenuitem *next_item;
-DbusmenuMenuitem *prev_item;
-DbusmenuMenuitem *pref_item;
-DbusmenuMenuitem *random_item;
+typedef struct {
+    DbusmenuMenuitem *menu;        // root menu item
+    DbusmenuMenuitem *item_play;   // play button
+    DbusmenuMenuitem *item_stop;   // stop button
+    DbusmenuMenuitem *item_next;   // next button
+    DbusmenuMenuitem *item_prev;   // prev button
+    DbusmenuMenuitem *item_pref;   // preference (settings) button
+    DbusmenuMenuitem *item_random; // shuffle button
+    DbusmenuMenuitem *item_help;   // about button
+    DbusmenuMenuitem *item_quit;   // quit button
 
-DbusmenuMenuitem *pb_menu;
-DbusmenuMenuitem *pb_order_linear;
-DbusmenuMenuitem *pb_order_shuffle_tracks;
-DbusmenuMenuitem *pb_order_random;
-DbusmenuMenuitem *pb_order_shuffle_albums;
-DbusmenuMenuitem *pb_loop_all;
-DbusmenuMenuitem *pb_loop_none;
-DbusmenuMenuitem *pb_loop_single;
+    DbusmenuMenuitem *pb_menu; // playback menu root item
+    /* Shuffle menu */
+    struct {
+        DbusmenuMenuitem *item_linear;         // DDB_SHUFFLE_OFF
+        DbusmenuMenuitem *item_shuffle_tracks; // DDB_SHUFFLE_TRACKS
+        DbusmenuMenuitem *item_random;         // DDB_SHUFFLE_RANDOM
+        DbusmenuMenuitem *item_shuffle_albums; // DDB_SHUFFLE_ALBUMS
 
-GSList *pb_order;
-GSList *pb_loop;
+        // Private
+        DbusmenuMenuitem *active_now; // now playback state
+    } pb_order;
+    /* Repeat menu */
+    struct {
+        DbusmenuMenuitem *item_all;    // DDB_REPEAT_ALL
+        DbusmenuMenuitem *item_none;   // DDB_REPEAT_NONE
+        DbusmenuMenuitem *item_single; // DDB_REPEAT_SINGLE
 
-DbusmenuMenuitem*
-create_menu_item (gchar *label, gchar *icon_name, SNIContextMenuItemType item_type);
+        // Private
+        DbusmenuMenuitem *active_now; // now playback state
+    } pb_loop;
 
-void
-on_quit_activate (DbusmenuMenuitem *menuitem) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
+    uintptr_t mlock;
+} sni_menu_t;
+
+static sni_menu_t *sm = NULL;
+static DB_functions_t *deadbeef;
+
+/* Generate actoion procedure name */
+#define SNI_CALLBACK_NAME(item) on_##item##_activate
+/* Menu item callback declaration */
+#define SNI_MENU_ITEM_CALLBACK(item) void SNI_CALLBACK_NAME(item)(DbusmenuMenuitem * menuitem)
+
+/* Menu item simple messaging function macro */
+static inline void
+sni_callback_message(unsigned msg) {
     if (deadbeef == NULL)
         return;
-    deadbeef->sendmessage (DB_EV_TERMINATE, 0, 0, 0);
+    deadbeef->sendmessage(msg, 0, 0, 0);
 }
-
-void
-on_play_activate (DbusmenuMenuitem *menuitem) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
-    if (deadbeef == NULL)
-        return;
-    deadbeef_toggle_play_pause ();
-}
-
-void
-on_stop_activate (DbusmenuMenuitem *menuitem) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
-    if (deadbeef == NULL)
-        return;
-    deadbeef->sendmessage (DB_EV_STOP, 0, 0, 0);
-}
-
-void
-on_next_activate (DbusmenuMenuitem *menuitem) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
-    if (deadbeef == NULL)
-        return;
-    deadbeef->sendmessage (DB_EV_NEXT, 0, 0, 0);
-}
-
-void
-on_prev_activate (DbusmenuMenuitem *menuitem) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
-    if (deadbeef == NULL)
-        return;
-    deadbeef->sendmessage (DB_EV_PREV, 0, 0, 0);
-}
-
-void
-on_random_activate (DbusmenuMenuitem *menuitem) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
-    if (deadbeef == NULL)
-        return;
-    deadbeef->sendmessage (DB_EV_PLAY_RANDOM, 0, 0, 0);
-}
-
-void
-on_pref_activate (DbusmenuMenuitem *menuitem) {
-    deadbeef_preferences_activate ();
-}
-
-void
-on_playback_order_activate (DbusmenuMenuitem *menuitem) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
-    if (deadbeef == NULL)
-        return;
-    guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (menuitem), "pb_data"));
-    deadbeef->conf_set_int ("playback.order", val);
-    deadbeef->sendmessage (DB_EV_CONFIGCHANGED, 0, 0, 0);
-}
-
-void
-on_playback_loop_activate (DbusmenuMenuitem *menuitem) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
-    if (deadbeef == NULL)
-        return;
-    guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (menuitem), "pb_data"));
-    deadbeef->conf_set_int ("playback.loop", val);
-    deadbeef->sendmessage (DB_EV_CONFIGCHANGED, 0, 0, 0);
-}
-
-void check_list (gpointer item, gpointer data) {
-    guint32 val = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (item), "pb_data"));
-    dbusmenu_menuitem_property_set_int (DBUSMENU_MENUITEM (item), DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                val == GPOINTER_TO_UINT (data) ? DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-}
-
-void
-update_playback_controls (void) {
-    DB_functions_t *deadbeef = deadbeef_get_instance ();
-    if (deadbeef == NULL)
-        return;
-    guint32 order = deadbeef->conf_get_int ("playback.order", 0);
-    guint32 loop  = deadbeef->conf_get_int ("playback.loop", 0);
-
-    g_slist_foreach (pb_order, check_list, GUINT_TO_POINTER (order));
-    g_slist_foreach (pb_loop, check_list, GUINT_TO_POINTER (loop));
-}
-
-DbusmenuMenuitem *
-get_context_menu (void) {
-    if (menu)
-        return menu;
-
-    menu = create_menu_item (_("Deadbeef"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
-    dbusmenu_menuitem_set_root (menu, TRUE);
-
-    pb_menu = create_menu_item (_("Playback"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
-
-    g_object_ref (menu);
-
-    /** Common media controls **/
-
-    quit_item = create_menu_item (_("Quit"), "application-exit", SNI_MENU_ITEM_TYPE_COMMON);
-    play_item = create_menu_item (_("Play"), "media-playback-start", SNI_MENU_ITEM_TYPE_COMMON);
-    stop_item = create_menu_item (_("Stop"), "media-playback-stop", SNI_MENU_ITEM_TYPE_COMMON);
-    prev_item = create_menu_item (_("Previous"), "media-skip-backward", SNI_MENU_ITEM_TYPE_COMMON);
-    next_item = create_menu_item (_("Next"), "media-skip-forward", SNI_MENU_ITEM_TYPE_COMMON);
-    random_item = create_menu_item (_("Play Random"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
-
-    g_signal_connect (quit_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_quit_activate), NULL);
-    g_signal_connect (play_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_play_activate), NULL);
-    g_signal_connect (stop_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_stop_activate), NULL);
-    g_signal_connect (prev_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_prev_activate), NULL);
-    g_signal_connect (next_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_next_activate), NULL);
-    g_signal_connect (random_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_random_activate), NULL);
-
-    dbusmenu_menuitem_child_append (menu, play_item);
-    dbusmenu_menuitem_child_append (menu, stop_item);
-    dbusmenu_menuitem_child_append (menu, prev_item);
-    dbusmenu_menuitem_child_append (menu, next_item);
-    dbusmenu_menuitem_child_append (menu, random_item);
-    dbusmenu_menuitem_child_append (menu, create_menu_item (NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
-
-    /** Playback settings controls **/
-    /** Playback order **/
-
-    pb_order_linear         = create_menu_item (_("Linear"), NULL, SNI_MENU_ITEM_TYPE_RADIO);
-    g_object_set_data (G_OBJECT (pb_order_linear), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_LINEAR));
-    pb_order = g_slist_append (pb_order, pb_order_linear);
-
-    pb_order_shuffle_tracks = create_menu_item (_("Shuffle tracks"), NULL, SNI_MENU_ITEM_TYPE_RADIO);
-    g_object_set_data (G_OBJECT (pb_order_shuffle_tracks), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_SHUFFLE_TRACKS));
-    pb_order = g_slist_append (pb_order, pb_order_shuffle_tracks);
-
-    pb_order_shuffle_albums = create_menu_item (_("Shuffle albums"), NULL, SNI_MENU_ITEM_TYPE_RADIO);
-    g_object_set_data (G_OBJECT (pb_order_shuffle_albums), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_SHUFFLE_ALBUMS));
-    pb_order = g_slist_append (pb_order, pb_order_shuffle_albums);
-
-    pb_order_random         = create_menu_item (_("Random"), NULL, SNI_MENU_ITEM_TYPE_RADIO);
-    g_object_set_data (G_OBJECT (pb_order_random), "pb_data", GUINT_TO_POINTER (PLAYBACK_ORDER_RANDOM));
-    pb_order = g_slist_append (pb_order, pb_order_random);
-
-    /** Playback loop **/
-
-    pb_loop_all         = create_menu_item (_("Loop all"), NULL, SNI_MENU_ITEM_TYPE_RADIO);
-    g_object_set_data (G_OBJECT (pb_loop_all), "pb_data", GUINT_TO_POINTER (PLAYBACK_MODE_LOOP_ALL));
-    pb_loop = g_slist_append (pb_loop, pb_loop_all);
-
-    pb_loop_single      = create_menu_item (_("Loop single song"), NULL, SNI_MENU_ITEM_TYPE_RADIO);
-    g_object_set_data (G_OBJECT (pb_loop_single), "pb_data", GUINT_TO_POINTER (PLAYBACK_MODE_LOOP_SINGLE));
-    pb_loop = g_slist_append (pb_loop, pb_loop_single);
-
-    pb_loop_none        = create_menu_item (_("Don't loop"), NULL, SNI_MENU_ITEM_TYPE_RADIO);
-    g_object_set_data (G_OBJECT (pb_loop_none), "pb_data", GUINT_TO_POINTER (PLAYBACK_MODE_NOLOOP));
-    pb_loop = g_slist_append (pb_loop, pb_loop_none);
-
-    update_playback_controls ();
-
-    g_signal_connect (pb_order_linear, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_playback_order_activate), NULL);
-    g_signal_connect (pb_order_shuffle_tracks, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_playback_order_activate), NULL);
-    g_signal_connect (pb_order_shuffle_albums, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_playback_order_activate), NULL);
-    g_signal_connect (pb_order_random, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_playback_order_activate), NULL);
-    g_signal_connect (pb_loop_all, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_playback_loop_activate), NULL);
-    g_signal_connect (pb_loop_single, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_playback_loop_activate), NULL);
-    g_signal_connect (pb_loop_none, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_playback_loop_activate), NULL);
-
-    dbusmenu_menuitem_child_append (pb_menu, pb_order_linear);
-    dbusmenu_menuitem_child_append (pb_menu, pb_order_shuffle_tracks);
-    dbusmenu_menuitem_child_append (pb_menu, pb_order_shuffle_albums);
-    dbusmenu_menuitem_child_append (pb_menu, pb_order_random);
-    dbusmenu_menuitem_child_append (pb_menu, create_menu_item (NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
-    dbusmenu_menuitem_child_append (pb_menu, pb_loop_all);
-    dbusmenu_menuitem_child_append (pb_menu, pb_loop_single);
-    dbusmenu_menuitem_child_append (pb_menu, pb_loop_none);
-
-    dbusmenu_menuitem_child_append (menu, pb_menu);
-    dbusmenu_menuitem_child_append (menu, create_menu_item (NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
-
-    if (deadbeef_preferences_available ()) {
-        pref_item = create_menu_item (_("Preferences"), "configure", SNI_MENU_ITEM_TYPE_COMMON);
-        g_signal_connect (pref_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, G_CALLBACK (on_pref_activate), NULL);
-        dbusmenu_menuitem_child_append (menu, pref_item);
+#define SNI_MENU_ITEM_MESSAGE(item, MSG)                                                           \
+    SNI_MENU_ITEM_CALLBACK(item) {                                                                 \
+        (void *)menuitem; /* unused messages cleanup */                                            \
+        sni_callback_message(MSG);                                                                 \
     }
-    dbusmenu_menuitem_child_append (menu, quit_item);
 
-    return menu;
+SNI_MENU_ITEM_MESSAGE(quit, DB_EV_TERMINATE);
+SNI_MENU_ITEM_MESSAGE(play, DB_EV_TOGGLE_PAUSE);
+SNI_MENU_ITEM_MESSAGE(stop, DB_EV_STOP);
+SNI_MENU_ITEM_MESSAGE(next, DB_EV_NEXT);
+SNI_MENU_ITEM_MESSAGE(prev, DB_EV_PREV);
+SNI_MENU_ITEM_MESSAGE(random, DB_EV_PLAY_RANDOM);
+
+SNI_MENU_ITEM_CALLBACK(pref) { deadbeef_preferences_activate(); }
+
+SNI_MENU_ITEM_CALLBACK(help) { deadbeef_help_activate(); }
+
+SNI_MENU_ITEM_CALLBACK(playback_order) {
+    DB_functions_t *deadbeef = deadbeef_get_instance();
+    if (deadbeef == NULL)
+        return;
+    guint32 val = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(menuitem), "pb_data"));
+    deadbeef->conf_set_int("playback.order", val);
+    deadbeef->sendmessage(DB_EV_CONFIGCHANGED, 0, 0, 0);
 }
 
-DbusmenuMenuitem*
-create_menu_item (gchar *label, gchar *icon_name, SNIContextMenuItemType item_type) {
+SNI_MENU_ITEM_CALLBACK(playback_loop) {
+    DB_functions_t *deadbeef = deadbeef_get_instance();
+    if (deadbeef == NULL)
+        return;
+    guint32 val = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(menuitem), "pb_data"));
+    deadbeef->conf_set_int("playback.loop", val);
+    deadbeef->sendmessage(DB_EV_CONFIGCHANGED, 0, 0, 0);
+}
+
+static inline void
+change_toogle_items(DbusmenuMenuitem *old, DbusmenuMenuitem *new) {
+    if (old)
+        dbusmenu_menuitem_property_set_int(old, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                           DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+    dbusmenu_menuitem_property_set_int(new, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                       DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+}
+
+static inline void
+update_playback_orders(const guint32 state) {
+    DbusmenuMenuitem *item_changed = NULL;
+    switch (state) {
+    case DDB_SHUFFLE_OFF:
+        item_changed = sm->pb_order.item_linear;
+        break;
+    case DDB_SHUFFLE_TRACKS:
+        item_changed = sm->pb_order.item_shuffle_tracks;
+        break;
+    case DDB_SHUFFLE_RANDOM:
+        item_changed = sm->pb_order.item_random;
+        break;
+    case DDB_SHUFFLE_ALBUMS:
+        item_changed = sm->pb_order.item_shuffle_albums;
+    }
+    if (item_changed != sm->pb_order.active_now) {
+        change_toogle_items(sm->pb_order.active_now, item_changed);
+        sm->pb_order.active_now = item_changed;
+    }
+}
+
+static inline void
+update_playback_loops(const guint32 state) {
+    DbusmenuMenuitem *item_changed = NULL;
+    switch (state) {
+    case DDB_REPEAT_ALL:
+        item_changed = sm->pb_loop.item_all;
+        break;
+    case DDB_REPEAT_OFF:
+        item_changed = sm->pb_loop.item_none;
+        break;
+    case DDB_REPEAT_SINGLE:
+        item_changed = sm->pb_loop.item_single;
+        break;
+    }
+    if (item_changed != sm->pb_loop.active_now) {
+        change_toogle_items(sm->pb_loop.active_now, item_changed);
+        sm->pb_loop.active_now = item_changed;
+    }
+}
+
+void
+update_playback_controls(void) {
+    if (deadbeef->conf_get_int("sni.menu_enable_playback", 1) == 0)
+        return;
+    if ((sm == NULL) || (sm->pb_menu == NULL))
+        return;
+
+    deadbeef->mutex_lock(sm->mlock);
+
+    update_playback_orders(deadbeef->conf_get_int("playback.order", 0));
+    update_playback_loops(deadbeef->conf_get_int("playback.loop", 0));
+
+    deadbeef->mutex_unlock(sm->mlock);
+}
+
+void
+update_play_controls(int play) {
+
+    static int play_state = SNI_STATE_TOOGLE_PAUSE;
+
+    if (play_state == play)
+        return;
+
+    deadbeef->mutex_lock(sm->mlock);
+
+    play_state = play;
+    switch (play) {
+    case SNI_STATE_TOOGLE_PLAY:
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_LABEL, _("Pause"));
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_ICON_NAME,
+                                       "media-playback-pause");
+        dbusmenu_menuitem_property_set_bool(sm->item_stop, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+        break;
+    case SNI_STATE_TOOGLE_STOP:
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_LABEL, _("Play"));
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_ICON_NAME,
+                                       "media-playback-start");
+        dbusmenu_menuitem_property_set_bool(sm->item_stop, DBUSMENU_MENUITEM_PROP_ENABLED, FALSE);
+        break;
+    case SNI_STATE_TOOGLE_PAUSE:
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_LABEL, _("Play"));
+        dbusmenu_menuitem_property_set(sm->item_play, DBUSMENU_MENUITEM_PROP_ICON_NAME,
+                                       "media-playback-start");
+        dbusmenu_menuitem_property_set_bool(sm->item_stop, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+        break;
+    }
+
+    deadbeef->mutex_unlock(sm->mlock);
+}
+
+static DbusmenuMenuitem *
+create_menu_item(gchar *label, gchar *icon_name, SNIContextMenuItemType item_type) {
     DbusmenuMenuitem *item;
 
-    item = dbusmenu_menuitem_new ();
-    dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, label);
+    item = dbusmenu_menuitem_new();
+    dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, label);
 
-    if (item_type == SNI_MENU_ITEM_TYPE_SEPARATOR)
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TYPE, "separator");
-    else if (item_type == SNI_MENU_ITEM_TYPE_RADIO)
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
-    else if (item_type == SNI_MENU_ITEM_TYPE_CHECKBOX)
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+    switch (item_type) {
+    case SNI_MENU_ITEM_TYPE_SEPARATOR:
+        dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, "separator");
+        break;
+    case SNI_MENU_ITEM_TYPE_RADIO:
+        dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                       DBUSMENU_MENUITEM_TOGGLE_RADIO);
+        break;
+    case SNI_MENU_ITEM_TYPE_CHECKBOX:
+        dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                       DBUSMENU_MENUITEM_TOGGLE_CHECK);
+        break;
+    case SNI_MENU_ITEM_TYPE_COMMON:
+    default:
+        break;
+    }
 
     if (icon_name)
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_ICON_NAME, icon_name);
+        dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_ICON_NAME, icon_name);
 
-    dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
-    dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-
+    dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+    dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 
     return item;
 }
 
-DbusmenuMenuitem *
-get_context_menu_item (SNIContextMenuItem item) {
-    get_context_menu ();
+#define CREATE_SEPARATOR_ITEM(menu)                                                                \
+    dbusmenu_menuitem_child_append(menu,                                                           \
+                                   create_menu_item(NULL, NULL, SNI_MENU_ITEM_TYPE_SEPARATOR));
 
-    switch (item) {
+#define CREATE_PLAYBACK_ITEM(menu, name, label, mode, callback)                                    \
+    do {                                                                                           \
+        sm->pb_##menu.item_##name = create_menu_item(label, NULL, SNI_MENU_ITEM_TYPE_RADIO);       \
+        g_object_set_data(G_OBJECT(sm->pb_##menu.item_##name), "pb_data", GUINT_TO_POINTER(mode)); \
+        g_signal_connect(sm->pb_##menu.item_##name, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,       \
+                         G_CALLBACK(callback), NULL);                                              \
+                                                                                                   \
+        dbusmenu_menuitem_child_append(sm->pb_menu, sm->pb_##menu.item_##name);                    \
+    } while (0)
+
+static inline DbusmenuMenuitem *
+create_menu_playback(void) {
+    sm->pb_menu = create_menu_item(_("Playback"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
+
+    CREATE_PLAYBACK_ITEM(order, linear, _("Shuffle - Off"), PLAYBACK_ORDER_LINEAR,
+                         SNI_CALLBACK_NAME(playback_order));
+    CREATE_PLAYBACK_ITEM(order, shuffle_tracks, _("Shuffle - Tracks"),
+                         PLAYBACK_ORDER_SHUFFLE_TRACKS, SNI_CALLBACK_NAME(playback_order));
+    CREATE_PLAYBACK_ITEM(order, shuffle_albums, _("Shuffle - Albums"),
+                         PLAYBACK_ORDER_SHUFFLE_ALBUMS, SNI_CALLBACK_NAME(playback_order));
+    CREATE_PLAYBACK_ITEM(order, random, _("Shuffle - Random Tracks"), PLAYBACK_ORDER_RANDOM,
+                         SNI_CALLBACK_NAME(playback_order));
+
+    CREATE_SEPARATOR_ITEM(sm->pb_menu);
+
+    CREATE_PLAYBACK_ITEM(loop, all, _("Repeat - All"), PLAYBACK_MODE_LOOP_ALL,
+                         SNI_CALLBACK_NAME(playback_loop));
+    CREATE_PLAYBACK_ITEM(loop, single, _("Repeat - Single Track"), PLAYBACK_MODE_LOOP_SINGLE,
+                         SNI_CALLBACK_NAME(playback_loop));
+    CREATE_PLAYBACK_ITEM(loop, none, _("Repeat - Off"), PLAYBACK_MODE_NOLOOP,
+                         SNI_CALLBACK_NAME(playback_loop));
+
+    update_playback_controls();
+
+    return sm->pb_menu;
+}
+
+#undef CREATE_PLAYBACK_ITEM
+
+#define CREATE_CONTEXT_ITEM(name, label, icon, callback)                                           \
+    do {                                                                                           \
+        sm->item_##name = create_menu_item(label, icon, SNI_MENU_ITEM_TYPE_COMMON);                \
+        g_signal_connect(sm->item_##name, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,                 \
+                         G_CALLBACK(callback), NULL);                                              \
+        dbusmenu_menuitem_child_append(sm->menu, sm->item_##name);                                 \
+    } while (0)
+
+static inline DbusmenuMenuitem *
+create_context_menu(void) {
+
+    sm->menu = create_menu_item(_("Deadbeef"), NULL, SNI_MENU_ITEM_TYPE_COMMON);
+    dbusmenu_menuitem_set_root(sm->menu, TRUE);
+
+    /** Common media controls **/
+
+    CREATE_CONTEXT_ITEM(play, _("Play"), "media-playback-start", SNI_CALLBACK_NAME(play));
+    CREATE_CONTEXT_ITEM(stop, _("Stop"), "media-playback-stop", SNI_CALLBACK_NAME(stop));
+    CREATE_CONTEXT_ITEM(prev, _("Previous"), "media-skip-backward", SNI_CALLBACK_NAME(prev));
+    CREATE_CONTEXT_ITEM(next, _("Next"), "media-skip-forward", SNI_CALLBACK_NAME(next));
+    CREATE_CONTEXT_ITEM(random, _("Play Random"), NULL, SNI_CALLBACK_NAME(random));
+
+    CREATE_SEPARATOR_ITEM(sm->menu);
+
+    /** Playback settings controls **/
+    if (deadbeef->conf_get_int("sni.menu_enable_playback", 1)) {
+        dbusmenu_menuitem_child_append(sm->menu, create_menu_playback());
+        CREATE_SEPARATOR_ITEM(sm->menu);
+    }
+
+    if (deadbeef_preferences_available())
+        CREATE_CONTEXT_ITEM(pref, _("Preferences"), "preferences-system", SNI_CALLBACK_NAME(pref));
+
+    if (deadbeef_help_available())
+        CREATE_CONTEXT_ITEM(help, _("Help"), "help-contents", SNI_CALLBACK_NAME(help));
+
+    CREATE_SEPARATOR_ITEM(sm->menu);
+
+    CREATE_CONTEXT_ITEM(quit, _("Quit"), "application-exit", SNI_CALLBACK_NAME(quit));
+
+    return sm->menu;
+}
+
+#undef CREATE_CONTEXT_ITEM
+#undef CREATE_SEPARATOR_ITEM
+
+DbusmenuMenuitem *
+get_context_menu_item(SNIContextMenuItem item) {
+    if (sm) {
+        switch (item) {
         case SNI_MENU_ITEM_PLAY:
-            return play_item;
+            return sm->item_play;
         case SNI_MENU_ITEM_STOP:
-            return stop_item;
+            return sm->item_stop;
         case SNI_MENU_ITEM_NEXT:
-            return next_item;
+            return sm->item_next;
         case SNI_MENU_ITEM_PREV:
-            return prev_item;
+            return sm->item_prev;
         case SNI_MENU_ITEM_RANDOM:
-            return random_item;
+            return sm->item_random;
         case SNI_MENU_ITEM_QUIT:
-            return quit_item;
+            return sm->item_quit;
+        }
     }
     return NULL;
+}
+
+DbusmenuMenuitem *
+get_context_menu(void) {
+    return (sm) ? sm->menu : NULL;
+}
+
+int
+sni_context_menu_create(void) {
+    deadbeef = deadbeef_get_instance();
+    if (deadbeef == NULL)
+        return -1;
+
+    sm = calloc(1, sizeof(sni_menu_t));
+    if (sm == NULL)
+        return -1;
+
+    sm->mlock = deadbeef->mutex_create();
+    if (sm->mlock) {
+        create_context_menu();
+    } else {
+        sni_free_null(sm);
+        return -1;
+    }
+
+    return 0;
+}
+
+void
+sni_context_menu_release(void) {
+    if (sm) {
+        deadbeef->mutex_free(sm->mlock);
+        sni_free_null(sm);
+    }
 }
