@@ -47,24 +47,35 @@ deadbeef_toggle_play_pause(void);
 
 static void
 on_activate_requested(void) {
-    if (toggle_mainwindow_action && 0) {
+    GtkWidget *mainwin = gtkui_plugin->get_mainwin();
+
+    if (deadbeef->conf_get_int("sni.enable_toggle", 1) == 0) {
+        if (gtk_widget_get_visible(mainwin))
+            return;
+    }
+
+    GdkWindow *gdk_window = gtk_widget_get_window(mainwin);
+
+    if (toggle_mainwindow_action) {
         toggle_mainwindow_action->callback2(toggle_mainwindow_action, -1);
     } else {
-        GtkWidget *mainwin = gtkui_plugin->get_mainwin();
-        GdkWindow *gdk_window = gtk_widget_get_window(mainwin);
-
         int iconified = gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_ICONIFIED;
         if (gtk_widget_get_visible(mainwin) && !iconified) {
             gtk_widget_hide(mainwin);
         } else {
             (iconified) ? gtk_window_deiconify(GTK_WINDOW(mainwin))
                         : gtk_window_present(GTK_WINDOW(mainwin));
-
-            gtk_window_move(GTK_WINDOW(mainwin), deadbeef->conf_get_int("mainwin.geometry.x", 0),
-                            deadbeef->conf_get_int("mainwin.geometry.y", 0));
-
-            gdk_x11_window_force_focus(gdk_window, 0);
         }
+        gtk_window_move(GTK_WINDOW(mainwin), deadbeef->conf_get_int("mainwin.geometry.x", 0),
+                        deadbeef->conf_get_int("mainwin.geometry.y", 0));
+    }
+
+    if (gtk_widget_get_visible(mainwin)) {
+#if defined(GDK_WINDOWING_WAYLAND)
+        GdkDisplay *display = gdk_display_get_default();
+        if (GDK_IS_X11_DISPLAY(display))
+#endif
+            gdk_x11_window_force_focus(gdk_window, 0);
     }
 }
 
@@ -287,6 +298,7 @@ sni_disconnect() {
 // clang-format off
 static const char settings_dlg[] =
     "property \"Enable Status Notifier\" checkbox sni.enabled 1;\n"
+    "property \"Enable minimize on icon click\" checkbox sni.enable_toggle 1;\n"
 
     "property \"Display playback status on icon (if DE support overlay icons)\" checkbox sni.enable_overlay 1;\n"
     "property \"Display Status Notifier tooltip (if DE support this)\" checkbox sni.enable_tooltip 1;\n"

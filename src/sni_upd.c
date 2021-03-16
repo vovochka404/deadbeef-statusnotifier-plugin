@@ -76,10 +76,14 @@ static void
 sni_get_tooltip(DB_playItem_t *track, int state, const gchar *fmt, gchar *buf, size_t sz) {
     const gchar *ns = _("not specified");
 
+    deadbeef->pl_lock();
+
     gchar *escaped_artist = GME_TEXT(get_track_artist(track));
     gchar *escaped_title = GME_TEXT(get_track_info(track, "title"));
     gchar *escaped_album = GME_TEXT(get_track_info(track, "album"));
     gchar *escaped_date = GME_TEXT(get_track_info(track, "year"));
+
+    deadbeef->pl_unlock();
 
     // clang-format off
     g_snprintf(buf, sz, fmt,
@@ -101,12 +105,18 @@ sni_get_tooltip(DB_playItem_t *track, int state, const gchar *fmt, gchar *buf, s
 
 static inline GdkPixbuf *
 sni_get_coverart(DB_playItem_t *track, void (*callback)(void *)) {
+
+    deadbeef->pl_lock();
+
     const char *uri = get_track_info(track, ":URI");
     const char *artist = get_track_artist(track);
     const char *album = get_track_info(track, "album");
+
     if (!album || !*album) {
         album = get_track_info(track, "title");
     }
+    deadbeef->pl_unlock();
+
 #if (DDB_GTKUI_API_LEVEL >= 202)
     GdkPixbuf *buf = gtkui_plugin->get_cover_art_thumb(uri, artist, album, 128, callback,
                                                        (callback) ? (void *)icon : NULL);
