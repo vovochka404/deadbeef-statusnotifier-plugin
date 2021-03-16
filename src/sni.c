@@ -47,14 +47,18 @@ deadbeef_toggle_play_pause(void);
 
 static void
 on_activate_requested(void) {
-
     GtkWidget *mainwin = gtkui_plugin->get_mainwin();
+
+    if (deadbeef->conf_get_int("sni.enable_toggle", 1) == 0) {
+        if (gtk_widget_get_visible(mainwin))
+            return;
+    }
+
     GdkWindow *gdk_window = gtk_widget_get_window(mainwin);
 
     if (toggle_mainwindow_action) {
         toggle_mainwindow_action->callback2(toggle_mainwindow_action, -1);
     } else {
-
         int iconified = gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_ICONIFIED;
         if (gtk_widget_get_visible(mainwin) && !iconified) {
             gtk_widget_hide(mainwin);
@@ -294,6 +298,7 @@ sni_disconnect() {
 // clang-format off
 static const char settings_dlg[] =
     "property \"Enable Status Notifier\" checkbox sni.enabled 1;\n"
+    "property \"Enable minimize on icon click\" checkbox sni.enable_toggle 1;\n"
 
     "property \"Display playback status on icon (if DE support overlay icons)\" checkbox sni.enable_overlay 1;\n"
     "property \"Display Status Notifier tooltip (if DE support this)\" checkbox sni.enable_tooltip 1;\n"
