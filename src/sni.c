@@ -47,11 +47,13 @@ deadbeef_toggle_play_pause(void);
 
 static void
 on_activate_requested(void) {
-    if (toggle_mainwindow_action && 0) {
+
+    GtkWidget *mainwin = gtkui_plugin->get_mainwin();
+    GdkWindow *gdk_window = gtk_widget_get_window(mainwin);
+
+    if (toggle_mainwindow_action) {
         toggle_mainwindow_action->callback2(toggle_mainwindow_action, -1);
     } else {
-        GtkWidget *mainwin = gtkui_plugin->get_mainwin();
-        GdkWindow *gdk_window = gtk_widget_get_window(mainwin);
 
         int iconified = gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_ICONIFIED;
         if (gtk_widget_get_visible(mainwin) && !iconified) {
@@ -59,12 +61,17 @@ on_activate_requested(void) {
         } else {
             (iconified) ? gtk_window_deiconify(GTK_WINDOW(mainwin))
                         : gtk_window_present(GTK_WINDOW(mainwin));
-
-            gtk_window_move(GTK_WINDOW(mainwin), deadbeef->conf_get_int("mainwin.geometry.x", 0),
-                            deadbeef->conf_get_int("mainwin.geometry.y", 0));
-
-            gdk_x11_window_force_focus(gdk_window, 0);
         }
+        gtk_window_move(GTK_WINDOW(mainwin), deadbeef->conf_get_int("mainwin.geometry.x", 0),
+                        deadbeef->conf_get_int("mainwin.geometry.y", 0));
+    }
+
+    if (gtk_widget_get_visible(mainwin)) {
+#if defined(GDK_WINDOWING_WAYLAND)
+        GdkDisplay *display = gdk_display_get_default();
+        if (GDK_IS_X11_DISPLAY(display))
+#endif
+            gdk_x11_window_force_focus(gdk_window, 0);
     }
 }
 
