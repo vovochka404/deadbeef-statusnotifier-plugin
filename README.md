@@ -13,6 +13,7 @@ __WARNING!__ Cinnamon supported using the XAppStatusIcons extension
 
 #### Known DE comptibilty bugs
 If you know how to fix certain bugs, patches are welcome.
+* The window is not restored in Wayland-based environments because Wayland (and GTK3 Wayland backend) does not provide access to top-level window management. Provided the ability to block minimization using the option `Enable minimize on icon click`
 * HTML notification tooltip style and icons is only supported by KDE Plasma
 * GNOME3 don't support notifiction tooltips (at least for the Ubuntu Appindicator extension)
 * GNOME3 SNI overlay icons work incorrect (update after refresh icon area)
