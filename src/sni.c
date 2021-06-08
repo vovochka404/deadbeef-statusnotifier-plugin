@@ -21,6 +21,7 @@
  */
 
 #include "sni.h"
+#include <sys/stat.h>
 
 static StatusNotifier *icon = NULL;
 
@@ -156,6 +157,36 @@ callback_wait_notifier_register(void *ctx) {
                            status_notifier_get_id(sni_ctx));
 }
 
+static StatusNotifier *
+sni_load_icon_portable(void) {
+    StatusNotifier *ret_icon = NULL;
+
+    char icon_path[PATH_MAX];
+    const char *prefix = deadbeef->get_system_dir(DDB_SYS_DIR_PREFIX);
+
+    if (snprintf(icon_path, PATH_MAX, "%s/%s", prefix, "deadbeef.png") < 0)
+        return NULL;
+
+    struct stat st_file;
+    if (stat(icon_path, &st_file) != 0)
+        return NULL;
+
+    GError *png_error = NULL;
+    GdkPixbuf *png_pixbuf = gdk_pixbuf_new_from_file(icon_path, &png_error);
+    if (png_pixbuf == NULL) {
+        deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO, "%s\n",
+                               png_error->message);
+        g_object_unref(png_error);
+        return NULL;
+    }
+
+    ret_icon = status_notifier_new_from_pixbuf(
+        "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS, png_pixbuf);
+    g_object_unref(png_pixbuf);
+
+    return ret_icon;
+}
+
 static void
 sni_reload_icon(gboolean enable) {
     if ((icon && enable) || (!icon && !enable))
@@ -163,8 +194,10 @@ sni_reload_icon(gboolean enable) {
 
     if (enable && !icon) {
         if (sni_context_menu_create() == 0) {
-            icon = status_notifier_new_from_icon_name(
-                "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS, "deadbeef");
+            if ((icon = sni_load_icon_portable()) == NULL) {
+                icon = status_notifier_new_from_icon_name(
+                    "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS, "deadbeef");
+            }
             status_notifier_set_status(icon, STATUS_NOTIFIER_STATUS_ACTIVE);
             status_notifier_set_title(icon, "DeaDBeeF");
             status_notifier_set_context_menu(icon, get_context_menu());
@@ -285,6 +318,7 @@ sni_connect() {
 
     sni_configchanged();
 
+    //    printf("PREFIX: %s", deadbeef->get_system_dir(DDB_SYS_DIR_PREFIX));
     return 0;
 }
 
