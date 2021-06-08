@@ -318,7 +318,6 @@ sni_connect() {
 
     sni_configchanged();
 
-    //    printf("PREFIX: %s", deadbeef->get_system_dir(DDB_SYS_DIR_PREFIX));
     return 0;
 }
 

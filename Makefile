@@ -40,18 +40,10 @@ INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA
 GTK2 = gtk+-2.0
 GTK3 = gtk+-3.0
 
-ifndef (GTK2_CFLAGS)
-    GTK2_CFLAGS = $(call pkg_cflags, $(GTK2))
-endif
-ifndef (GTK2_LIBS)
-    GTK2_LIBS = $(call pkg_ldflags, $(GTK2))
-endif
-ifndef (GTK3_CFLAGS)
-    GTK3_CFLAGS = $(call pkg_cflags, $(GTK3))
-endif
-ifndef (GTK3_LIBS)
-    GTK3_LIBS = $(call pkg_ldflags, $(GTK3))
-endif
+GTK2_CFLAGS ?= $(call pkg_cflags, $(GTK2))
+GTK2_LIBS ?= $(call pkg_ldflags, $(GTK2))
+GTK3_CFLAGS ?= $(call pkg_cflags, $(GTK3))
+GTK3_LIBS ?= $(call pkg_ldflags, $(GTK3))
 
 SNI_SRC_LIST = menu.c sni.c
 SNI_EXT_LIST = statusnotifier.c closures.c

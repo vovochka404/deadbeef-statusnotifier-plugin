@@ -5,9 +5,9 @@
 This plugin aims to implement the StatusNotifierItem for DeaDBeeF.
 
 It tends to replace default tray icon on DE that supports StatusNotifierIitem protocol.
-It also aims to provide tray icon for deadbeef on DE where old xmbedded icons aren't supported anymore, such as KDE Plasma 5, Cinnamon, GNOME3.
+It also aims to provide tray icon for deadbeef on DE where old xmbedded icons aren't supported anymore, such as KDE Plasma 5, GNOME(3+), Cinnamon, etc.
 
-__WARNING!__ GNOME3 supported using the [Appindictor Extension](https://github.com/ubuntu/gnome-shell-extension-appindicator) or similar.
+__WARNING!__ GNOME supported using the [Appindictor Extension](https://github.com/ubuntu/gnome-shell-extension-appindicator) or similar.
 
 __WARNING!__ Cinnamon supported using the XAppStatusIcons extension
 
@@ -15,8 +15,8 @@ __WARNING!__ Cinnamon supported using the XAppStatusIcons extension
 If you know how to fix certain bugs, patches are welcome.
 * The window is not restored in Wayland-based environments because Wayland (and GTK3 Wayland backend) does not provide access to top-level window management. Provided the ability to block minimization using the option `Enable minimize on icon click`
 * HTML notification tooltip style and icons is only supported by KDE Plasma
-* GNOME3 don't support notifiction tooltips (at least for the Ubuntu Appindicator extension)
-* GNOME3 SNI overlay icons work incorrect (update after refresh icon area)
+* GNOME don't support notifiction tooltips (at least for the Ubuntu Appindicator extension)
+* GNOME SNI overlay icons work incorrect (update after refresh icon area)
 * Cinnamon don't support SNI overlay icons
 * In the new version of KDE Plasma (> = 5.19, Ubuntu 20.10), tooltip icons are not displayed. This is tested on KDE Plasma 5.5 (Ubuntu 16.04) and works correctly.
 
@@ -61,6 +61,7 @@ Package name with development files for deadbeef will depend on selected ppa.
 	make
 ```
 Use target `gtk2` or `gtk3` for separate build. Install target NOT support. Build only gtk3 with `all` target.
+__WARNING!__ gtk2 build needed `glib >= 2.24` with `GVariant` data type support.
 
 ### Activation
 
