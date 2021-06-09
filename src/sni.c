@@ -349,11 +349,11 @@ static const char settings_dlg[] =
 
 static DB_misc_t plugin = {
     .plugin.type = DB_PLUGIN_MISC,
-    .plugin.flags = DDB_PLUGIN_FLAG_LOGGING,
     .plugin.api_vmajor = 1,
     .plugin.api_vminor = 11,
     .plugin.version_major = 1,
     .plugin.version_minor = 5,
+    .plugin.flags = DDB_PLUGIN_FLAG_LOGGING,
 #if GTK_CHECK_VERSION(3, 0, 0)
     .plugin.id = "sni_gtk3",
     .plugin.name = "Status Notifier GTK3 UI",
@@ -381,10 +381,10 @@ static DB_misc_t plugin = {
                         "along with this program.  If not, see "
                         "<http://www.gnu.org/licenses/>.\n",
     .plugin.website = "https://github.com/vovochka404/deadbeef-statusnotifier-plugin",
-    .plugin.configdialog = settings_dlg,
-    .plugin.message = sni_message,
     .plugin.connect = sni_connect,
     .plugin.disconnect = sni_disconnect,
+    .plugin.message = sni_message,
+    .plugin.configdialog = settings_dlg
 };
 
 SNI_EXPORT_FUNC DB_plugin_t *

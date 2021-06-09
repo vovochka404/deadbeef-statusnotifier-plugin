@@ -34,7 +34,7 @@ SNI_LDFLAGS ?= $(call pkg_ldflags, $(SNI_DEPS))
 
 SNI_CFLAGS += -DUSE_DBUSMENU -DENABLE_NLS -DG_LOG_DOMAIN=\"plugin-sni\"
 
-CFLAGS   += -Wall -Wextra -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -O2 -fvisibility=hidden $(SNI_CFLAGS)
+CFLAGS   += -Wall -Wextra -fPIC -std=c99 -D_GNU_SOURCE -Wno-missing-field-initializers -Wno-unused -O2 -fvisibility=hidden $(SNI_CFLAGS)
 LDFLAGS  += -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections -lX11 $(SNI_LDFLAGS)
 INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA))
 
