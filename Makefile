@@ -28,12 +28,14 @@ LIST_CLEAN = CMakeCache.txt         \
 			 .ninja_log             \
 			 *.ninja
 
-SNI_DEFS += -DUSE_DBUSMENU -DENABLE_NLS -DG_LOG_DOMAIN=\"plugin-sni\"
 SNI_DEPS += dbusmenu-glib-0.4
+SNI_CFLAGS ?= $(call pkg_cflags, $(SNI_DEPS))
+SNI_LDFLAGS ?= $(call pkg_ldflags, $(SNI_DEPS))
 
-CFLAGS   += -Wall -Wextra -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -O2 -fvisibility=hidden
-CFLAGS   +=$(call pkg_cflags, $(SNI_DEPS))
-LDFLAGS  += -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections -lX11
+SNI_CFLAGS += -DUSE_DBUSMENU -DENABLE_NLS -DG_LOG_DOMAIN=\"plugin-sni\"
+
+CFLAGS   += -Wall -Wextra -fPIC -std=c99 -D_GNU_SOURCE -Wno-unused -O2 -fvisibility=hidden $(SNI_CFLAGS)
+LDFLAGS  += -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections -lX11 $(SNI_LDFLAGS)
 INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA))
 
 
@@ -53,7 +55,7 @@ OBJ_GTK3 = $(patsubst %.c, $(PATH_BUILD3)/%.o, $(SNI_SRC))
 
 ### FUNCTIONS
 define compile
-    $(CC) $(CFLAGS) $(SNI_DEFS) $(INCLUDES) $1 $(abspath $2) -c -o $(abspath $@)
+    $(CC) $(CFLAGS) $(INCLUDES) $1 $(abspath $2) -c -o $(abspath $@)
 endef
 define link
     $(CC) $(LDFLAGS) $(abspath $^) $1 -o $(abspath $@)
@@ -89,13 +91,13 @@ mkdirs_gtk2:
 ## BUILD TARGETS
 
 $(PATH_BUILD)/$(OUT_GTK3): $(OBJ_GTK3)
-	@$(call link, $(GTK3_LIBS) $(call pkg_ldflags, $(SNI_DEPS)))
+	@$(call link, $(GTK3_LIBS))
 
 $(PATH_BUILD3)/%.o: $(SNI_SRC)
 	@$(call compile, $(GTK3_CFLAGS), $(filter %$(@F:%.o=%.c), $^))
 
 $(PATH_BUILD)/$(OUT_GTK2): $(OBJ_GTK2)
-	@$(call link, $(GTK2_LIBS) $(call pkg_ldflags, $(SNI_DEPS)))
+	@$(call link, $(GTK2_LIBS))
 
 $(PATH_BUILD2)/%.o: $(SNI_SRC)
 	@$(call compile, $(GTK2_CFLAGS), $(filter %$(@F:%.o=%.c), $^))
