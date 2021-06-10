@@ -74,6 +74,19 @@ enum {
     SNI_STATE_TOOGLE_STOP = 2,
 };
 
+#define SNI_OPTION_ENABLE "sni.enabled"
+#define SNI_OPTION_ICON_MINIMIZE "sni.icon_minimize_action"
+#define SNI_OPTION_ICON_OVERLAY "sni.icon_overlay"
+#define SNI_OPTION_ICON_REPLACE "sni.icon_replace"
+#define SNI_OPTION_TOOLTIP_ENABLE "sni.tooltip_enable"
+#define SNI_OPTION_TOOLTIP_ISTEXT "sni.tooltip_istext"
+#define SNI_OPTION_TOOLTIP_ICON "sni.tooltip_icon"
+#define SNI_OPTION_MENU_PLAYBACK "sni.menu_playback"
+#define SNI_OPTION_MENU_TOGGLE "sni.menu_wmtoggle"
+#define SNI_OPTION_VOLUME_HORIZONTAL "sni.volume_hdirect"
+#define SNI_OPTION_VOLUME_INVERSE "sni.volume_inverse"
+#define SNI_OPTION_TIMEOUT "sni.timeout"
+
 DbusmenuMenuitem *
 get_context_menu(void);
 

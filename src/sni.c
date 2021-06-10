@@ -88,7 +88,7 @@ static void
 on_activate_requested(void) {
     GtkWidget *mainwin = gtkui_plugin->get_mainwin();
 
-    if (deadbeef->conf_get_int("sni.enable_toggle", 1) == 0) {
+    if (deadbeef->conf_get_int(SNI_OPTION_ICON_MINIMIZE, 1) == 0) {
         if (gtk_widget_get_visible(mainwin))
             return;
     }
@@ -102,11 +102,11 @@ on_sec_activate_requested(void) {
 
 static void
 on_scroll_requested(StatusNotifier *sn, int diff, StatusNotifierScrollOrientation direction) {
-    if (deadbeef->conf_get_int("sni.volume_hdirect_ignore", 1))
+    if (deadbeef->conf_get_int(SNI_OPTION_VOLUME_HORIZONTAL, 1))
         if (direction == STATUS_NOTIFIER_SCROLL_ORIENTATION_HORIZONTAL)
             return;
 
-    if (deadbeef->conf_get_int("sni.volume_reverse", 0))
+    if (deadbeef->conf_get_int(SNI_OPTION_VOLUME_INVERSE, 0))
         diff *= -1;
 
     float vol = deadbeef->volume_get_db();
@@ -146,7 +146,7 @@ callback_wait_notifier_register(void *ctx) {
 
     status_notifier_register(sni_ctx);
 
-    uint32_t wait_time = deadbeef->conf_get_int("sni.waiting_load_sec", 30);
+    uint32_t wait_time = deadbeef->conf_get_int(SNI_OPTION_TIMEOUT, 30);
     for (uint32_t i = 0; i < wait_time; i++) {
         state = status_notifier_get_state(sni_ctx);
         if (state == STATUS_NOTIFIER_STATE_REGISTERED) {
@@ -209,10 +209,10 @@ sni_reload_icon(gboolean enable) {
 
     if (enable && !icon) {
         if (sni_context_menu_create() == 0) {
-            if (deadbeef->conf_get_int("sni.replace_icon", 0)) {
+            if (deadbeef->conf_get_int(SNI_OPTION_ICON_REPLACE, 0)) {
                 icon = status_notifier_new_from_icon_name(
                     "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS,
-                    "applications-multimedia");
+                    "audio-x-generic");
             } else {
                 if ((icon = sni_load_icon_portable()) == NULL) {
                     icon = status_notifier_new_from_icon_name(
@@ -282,7 +282,7 @@ deadbeef_help_activate(void) {
 
 static void
 sni_configchanged(void) {
-    if (deadbeef->conf_get_int("sni.enabled", 1)) {
+    if (deadbeef->conf_get_int(SNI_OPTION_ENABLE, 1)) {
         sni_flag_set(SNI_FLAG_ENABLED);
         deadbeef->conf_set_int("gtkui.hide_tray_icon", 1);
     } else {
@@ -351,22 +351,22 @@ sni_disconnect() {
 
 // clang-format off
 static const char settings_dlg[] =
-    "property \"Enable Status Notifier\" checkbox sni.enabled 1;\n"
-    "property \"Enable minimize on icon click\" checkbox sni.enable_toggle 1;\n"
+    "property \"Enable Status Notifier\" checkbox "SNI_OPTION_ENABLE" 1;\n"
+    "property \"Enable minimize on icon click\" checkbox "SNI_OPTION_ICON_MINIMIZE" 1;\n"
+    "property \"Replace icon on native DE icon (if standart broken)\" checkbox "SNI_OPTION_ICON_REPLACE" 0;\n"
 
-    "property \"Display playback status on icon (if DE support overlay icons)\" checkbox sni.enable_overlay 1;\n"
-    "property \"Display Status Notifier tooltip (if DE support this)\" checkbox sni.enable_tooltip 1;\n"
-    "property \"Use plain text tooltip (if DE not support HTML tooltips)\" checkbox sni.tooltip_plain_text 0;\n"
-    "property \"Set tooltip icon (if DE support this)\" checkbox sni.tooltip_enable_icon 1;\n"
+    "property \"Display playback status on icon (if DE support overlay icons)\" checkbox "SNI_OPTION_ICON_OVERLAY" 1;\n"
+    "property \"Display Status Notifier tooltip (if DE support this)\" checkbox "SNI_OPTION_TOOLTIP_ENABLE" 1;\n"
+    "property \"Use plain text tooltip (if DE not support HTML tooltips)\" checkbox "SNI_OPTION_TOOLTIP_ISTEXT" 0;\n"
+    "property \"Set tooltip icon (if DE support this)\" checkbox "SNI_OPTION_TOOLTIP_ICON" 1;\n"
     
-    "property \"Enable playback options in menu (need restart)\" checkbox sni.menu_enable_playback 1;\n"
-    "property \"Enable window mode options in menu (need restart)\" checkbox sni.menu_enable_wmtoogle 1;\n"
+    "property \"Enable playback options in menu (need restart)\" checkbox "SNI_OPTION_MENU_PLAYBACK" 1;\n"
+    "property \"Enable window mode options in menu (need restart)\" checkbox "SNI_OPTION_MENU_TOGGLE" 1;\n"
 
-    "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
-    "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
+    "property \"Volume control ignore horizontal scroll\" checkbox "SNI_OPTION_VOLUME_HORIZONTAL" 1;\n"
+    "property \"Volume control use inverse scroll direction\" checkbox "SNI_OPTION_VOLUME_INVERSE" 0;\n"
     
-    "property \"Replace icon on native DE icon (if standart broken)\" checkbox sni.replace_icon 0;\n"
-    "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_load_sec 30;\n"
+    "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] "SNI_OPTION_TIMEOUT" 30;\n"
 ;
 // clang-format on
 

@@ -121,7 +121,7 @@ change_toogle_items(DbusmenuMenuitem *old, DbusmenuMenuitem *new) {
 
 void
 update_window_controls(void) {
-    if (deadbeef->conf_get_int("sni.menu_enable_wmtoogle", 1) == 0)
+    if (deadbeef->conf_get_int(SNI_OPTION_MENU_TOGGLE, 1) == 0)
         return;
     if (sni_flag_get(SNI_FLAG_HIDDEN) && !deadbeef_window_is_visible())
         return;
@@ -187,7 +187,7 @@ update_playback_loops(const guint32 state) {
 
 void
 update_playback_controls(void) {
-    if (deadbeef->conf_get_int("sni.menu_enable_playback", 1) == 0)
+    if (deadbeef->conf_get_int(SNI_OPTION_MENU_PLAYBACK, 1) == 0)
         return;
     if ((sm == NULL) || (sm->pb_menu == NULL))
         return;
@@ -336,11 +336,11 @@ create_context_menu(void) {
     CREATE_SEPARATOR_ITEM(sm->menu);
 
     /** Playback settings controls **/
-    if (deadbeef->conf_get_int("sni.menu_enable_playback", 1)) {
+    if (deadbeef->conf_get_int(SNI_OPTION_MENU_PLAYBACK, 1)) {
         dbusmenu_menuitem_child_append(sm->menu, create_menu_playback());
         CREATE_SEPARATOR_ITEM(sm->menu);
     }
-    if (deadbeef->conf_get_int("sni.menu_enable_wmtoogle", 1)) {
+    if (deadbeef->conf_get_int(SNI_OPTION_MENU_TOGGLE, 1)) {
         if (deadbeef->conf_get_int("gtkui.hide_tray_icon", 0) == 0) {
             CREATE_CONTEXT_ITEM(show, _("Show Player Window"), "go-up", SNI_CALLBACK_NAME(show));
         } else {
