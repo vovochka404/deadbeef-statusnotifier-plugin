@@ -34,8 +34,8 @@ SNI_LDFLAGS ?= $(call pkg_ldflags, $(SNI_DEPS))
 
 SNI_CFLAGS += -DUSE_DBUSMENU -DENABLE_NLS -DG_LOG_DOMAIN=\"plugin-sni\"
 
-CFLAGS   += -Wall -Wextra -fPIC -std=c99 -D_GNU_SOURCE -Wno-missing-field-initializers -Wno-unused -O2 -fvisibility=hidden $(SNI_CFLAGS)
-LDFLAGS  += -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections -lX11 $(SNI_LDFLAGS)
+CFLAGS   += -Wall -Wextra -fPIC -std=c99 -D_GNU_SOURCE -Wno-missing-field-initializers -Wno-unused -O2 -fvisibility=hidden
+LDFLAGS  += -shared -s -fdata-sections -ffunction-sections -Wl,-gc-sections -lX11
 INCLUDES += -I $(abspath ./) -I $(abspath $(PATH_SRC)) -I $(abspath $(PATH_EXTRA))
 
 
@@ -55,10 +55,10 @@ OBJ_GTK3 = $(patsubst %.c, $(PATH_BUILD3)/%.o, $(SNI_SRC))
 
 ### FUNCTIONS
 define compile
-    $(CC) $(CFLAGS) $(INCLUDES) $1 $(abspath $2) -c -o $(abspath $@)
+    $(CC) $(CFLAGS) $(INCLUDES) $(SNI_CFLAGS) $1 $(abspath $2) -c -o $(abspath $@)
 endef
 define link
-    $(CC) $(LDFLAGS) $(abspath $^) $1 -o $(abspath $@)
+    $(CC) $(LDFLAGS) $(abspath $^) $(SNI_LDFLAGS) $1 -o $(abspath $@)
 endef
 
 ### TARGETS
