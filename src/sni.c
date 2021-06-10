@@ -209,9 +209,15 @@ sni_reload_icon(gboolean enable) {
 
     if (enable && !icon) {
         if (sni_context_menu_create() == 0) {
-            if ((icon = sni_load_icon_portable()) == NULL) {
+            if (deadbeef->conf_get_int("sni.replace_icon", 0)) {
                 icon = status_notifier_new_from_icon_name(
-                    "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS, "deadbeef");
+                    "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS,
+                    "applications-multimedia");
+            } else {
+                if ((icon = sni_load_icon_portable()) == NULL) {
+                    icon = status_notifier_new_from_icon_name(
+                        "deadbeef", STATUS_NOTIFIER_CATEGORY_APPLICATION_STATUS, "deadbeef");
+                }
             }
             status_notifier_set_status(icon, STATUS_NOTIFIER_STATUS_ACTIVE);
             status_notifier_set_title(icon, "DeaDBeeF");
@@ -359,6 +365,7 @@ static const char settings_dlg[] =
     "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
     
+    "property \"Replace icon on native DE icon (if standart broken)\" checkbox sni.replace_icon 0;\n"
     "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] sni.waiting_load_sec 30;\n"
 ;
 // clang-format on
