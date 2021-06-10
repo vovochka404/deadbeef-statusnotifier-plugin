@@ -30,8 +30,8 @@ static sni_flags_t sni_flags = {0};
 
 gboolean
 sni_flag_get(uint32_t code) {
-    gboolean ret = (sni_flags.v1 & ((uint32_t)1 << code));
-    return ret;
+    int ret = (sni_flags.v1 & ((uint32_t)1 << code));
+    return (ret > 0) ? TRUE : FALSE;
 }
 
 void

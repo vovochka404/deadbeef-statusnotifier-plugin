@@ -46,15 +46,19 @@ deadbeef_toggle_play_pause(void);
 #include "sni_timer.c"
 #include "x11-force-focus.c"
 
-static void
-on_activate_requested(void) {
+gboolean
+deadbeef_window_is_visible(void) {
     GtkWidget *mainwin = gtkui_plugin->get_mainwin();
+    GdkWindow *gdk_window = gtk_widget_get_window(mainwin);
 
-    if (deadbeef->conf_get_int("sni.enable_toggle", 1) == 0) {
-        if (gtk_widget_get_visible(mainwin))
-            return;
-    }
+    int iconified = gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_ICONIFIED;
 
+    return gtk_widget_get_visible(mainwin) && !iconified;
+}
+
+void
+deadbeef_toogle_window(void) {
+    GtkWidget *mainwin = gtkui_plugin->get_mainwin();
     GdkWindow *gdk_window = gtk_widget_get_window(mainwin);
 
     if (toggle_mainwindow_action) {
@@ -78,6 +82,17 @@ on_activate_requested(void) {
 #endif
             gdk_x11_window_force_focus(gdk_window, 0);
     }
+}
+
+static void
+on_activate_requested(void) {
+    GtkWidget *mainwin = gtkui_plugin->get_mainwin();
+
+    if (deadbeef->conf_get_int("sni.enable_toggle", 1) == 0) {
+        if (gtk_widget_get_visible(mainwin))
+            return;
+    }
+    deadbeef_toogle_window();
 }
 
 static void
@@ -339,6 +354,7 @@ static const char settings_dlg[] =
     "property \"Set tooltip icon (if DE support this)\" checkbox sni.tooltip_enable_icon 1;\n"
     
     "property \"Enable playback options in menu (need restart)\" checkbox sni.menu_enable_playback 1;\n"
+    "property \"Enable window mode options in menu (need restart)\" checkbox sni.menu_enable_wmtoogle 1;\n"
 
     "property \"Volume control ignore horizontal scroll\" checkbox sni.volume_hdirect_ignore 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox sni.volume_reverse 0;\n"
@@ -384,8 +400,7 @@ static DB_misc_t plugin = {
     .plugin.connect = sni_connect,
     .plugin.disconnect = sni_disconnect,
     .plugin.message = sni_message,
-    .plugin.configdialog = settings_dlg
-};
+    .plugin.configdialog = settings_dlg};
 
 SNI_EXPORT_FUNC DB_plugin_t *
 #if GTK_CHECK_VERSION(3, 0, 0)

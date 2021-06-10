@@ -66,10 +66,7 @@ typedef enum {
     SNI_MENU_ITEM_TYPE_SEPARATOR
 } SNIContextMenuItemType;
 
-typedef enum {
-    SNI_FLAG_ENABLED = 1 << 0,
-    SNI_FLAG_LOADED = 1 << 1,
-} SNIFlags;
+typedef enum { SNI_FLAG_ENABLED = 0, SNI_FLAG_LOADED = 1, SNI_FLAG_HIDDEN = 2 } SNIFlags;
 
 enum {
     SNI_STATE_TOOGLE_PLAY = 0,
@@ -82,6 +79,15 @@ get_context_menu(void);
 
 DbusmenuMenuitem *
 get_context_menu_item(SNIContextMenuItem item);
+
+gboolean
+deadbeef_window_is_visible(void);
+
+void
+deadbeef_toogle_window(void);
+
+void
+update_window_controls(void);
 
 void
 update_playback_controls(void);
@@ -106,6 +112,15 @@ sni_context_menu_create(void);
 
 void
 sni_context_menu_release(void);
+
+gboolean
+sni_flag_get(uint32_t code);
+
+void
+sni_flag_set(uint32_t code);
+
+void
+sni_flag_unset(uint32_t code);
 
 #define sni_free_null(X)                                                                           \
     do {                                                                                           \
