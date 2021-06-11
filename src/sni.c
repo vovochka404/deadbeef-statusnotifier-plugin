@@ -375,7 +375,7 @@ static DB_misc_t plugin = {
     .plugin.api_vmajor = 1,
     .plugin.api_vminor = 11,
     .plugin.version_major = 1,
-    .plugin.version_minor = 5,
+    .plugin.version_minor = 6,
     .plugin.flags = DDB_PLUGIN_FLAG_LOGGING,
 #if GTK_CHECK_VERSION(3, 0, 0)
     .plugin.id = "sni_gtk3",
@@ -385,10 +385,14 @@ static DB_misc_t plugin = {
     .plugin.name = "Status Notifier GTK2 UI",
 #endif
     .plugin.descr = "StatusNotifierItem for DE without support for xembedded icons\n"
-                    "(like plasma5 or GNOME3). It also can be used for a better look&feel "
-                    "experience.\n",
+                    "(like Plasma5 or GNOME3+). It also can be used for a better \n"
+                    "look&feel experience.\n"
+                    "The functionality of the plugin depends on the quality and \n"
+                    "completeness of the implementation of the SNI functionality \n"
+                    "in a particular DE.",
     .plugin.copyright = "StatusNotifier plugin for DeaDBeeF Player\n"
                         "Copyright (C) 2015 Vladimir Perepechin <vovochka13@gmail.com>\n"
+                        "Copyright (C) 2020 Alexander Smirnov <skymaverickas@gmail.com>\n"
                         "\n"
                         "This program is free software: you can redistribute it and/or modify\n"
                         "it under the terms of the GNU General Public License as published by\n"
