@@ -30,6 +30,7 @@ typedef struct {
     DbusmenuMenuitem *item_prev;   // prev button
     DbusmenuMenuitem *item_pref;   // preference (settings) button
     DbusmenuMenuitem *item_random; // shuffle button
+    DbusmenuMenuitem *item_show;   // show/hide button
     DbusmenuMenuitem *item_help;   // about button
     DbusmenuMenuitem *item_quit;   // quit button
 
@@ -85,6 +86,8 @@ SNI_MENU_ITEM_MESSAGE(next, DB_EV_NEXT);
 SNI_MENU_ITEM_MESSAGE(prev, DB_EV_PREV);
 SNI_MENU_ITEM_MESSAGE(random, DB_EV_PLAY_RANDOM);
 
+SNI_MENU_ITEM_CALLBACK(show) { deadbeef_toogle_window(); }
+
 SNI_MENU_ITEM_CALLBACK(pref) { deadbeef_preferences_activate(); }
 
 SNI_MENU_ITEM_CALLBACK(help) { deadbeef_help_activate(); }
@@ -114,6 +117,30 @@ change_toogle_items(DbusmenuMenuitem *old, DbusmenuMenuitem *new) {
                                            DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
     dbusmenu_menuitem_property_set_int(new, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
                                        DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+}
+
+void
+update_window_controls(void) {
+    if (deadbeef->conf_get_int(SNI_OPTION_MENU_TOGGLE, 1) == 0)
+        return;
+    if (sni_flag_get(SNI_FLAG_HIDDEN) && !deadbeef_window_is_visible())
+        return;
+    if ((!sni_flag_get(SNI_FLAG_HIDDEN)) && deadbeef_window_is_visible())
+        return;
+
+    if (sni_flag_get(SNI_FLAG_HIDDEN)) {
+        g_debug("%s\n", "Update controls: SHOW");
+        dbusmenu_menuitem_property_set(sm->item_show, DBUSMENU_MENUITEM_PROP_LABEL,
+                                       _("Hide Player Window"));
+        dbusmenu_menuitem_property_set(sm->item_show, DBUSMENU_MENUITEM_PROP_ICON_NAME, "go-down");
+        sni_flag_unset(SNI_FLAG_HIDDEN);
+    } else {
+        g_debug("%s\n", "Update controls: HIDE");
+        dbusmenu_menuitem_property_set(sm->item_show, DBUSMENU_MENUITEM_PROP_LABEL,
+                                       _("Show Player Window"));
+        dbusmenu_menuitem_property_set(sm->item_show, DBUSMENU_MENUITEM_PROP_ICON_NAME, "go-up");
+        sni_flag_set(SNI_FLAG_HIDDEN);
+    }
 }
 
 static inline void
@@ -160,7 +187,7 @@ update_playback_loops(const guint32 state) {
 
 void
 update_playback_controls(void) {
-    if (deadbeef->conf_get_int("sni.menu_enable_playback", 1) == 0)
+    if (deadbeef->conf_get_int(SNI_OPTION_MENU_PLAYBACK, 1) == 0)
         return;
     if ((sm == NULL) || (sm->pb_menu == NULL))
         return;
@@ -309,11 +336,17 @@ create_context_menu(void) {
     CREATE_SEPARATOR_ITEM(sm->menu);
 
     /** Playback settings controls **/
-    if (deadbeef->conf_get_int("sni.menu_enable_playback", 1)) {
+    if (deadbeef->conf_get_int(SNI_OPTION_MENU_PLAYBACK, 1)) {
         dbusmenu_menuitem_child_append(sm->menu, create_menu_playback());
         CREATE_SEPARATOR_ITEM(sm->menu);
     }
-
+    if (deadbeef->conf_get_int(SNI_OPTION_MENU_TOGGLE, 1)) {
+        if (deadbeef->conf_get_int("gtkui.hide_tray_icon", 0) == 0) {
+            CREATE_CONTEXT_ITEM(show, _("Show Player Window"), "go-up", SNI_CALLBACK_NAME(show));
+        } else {
+            CREATE_CONTEXT_ITEM(show, _("Hide Player Window"), "go-down", SNI_CALLBACK_NAME(show));
+        }
+    }
     if (deadbeef_preferences_available())
         CREATE_CONTEXT_ITEM(pref, _("Preferences"), "preferences-system", SNI_CALLBACK_NAME(pref));
 

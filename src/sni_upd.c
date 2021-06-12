@@ -165,7 +165,7 @@ sni_set_tooltip_html(DB_playItem_t *track, int state) {
     gchar title_body[TOOLTIP_MAX_LENGTH];
     sni_get_tooltip(track, state, _(TOOLTIP_FORMAT), title_body, TOOLTIP_MAX_LENGTH);
 
-    if ((deadbeef->conf_get_int("sni.tooltip_enable_icon", 1)) &&
+    if ((deadbeef->conf_get_int(SNI_OPTION_TOOLTIP_ICON, 1)) &&
         ((state == DDB_PLAYBACK_STATE_PLAYING) || (state == DDB_PLAYBACK_STATE_PAUSED))) {
         GdkPixbuf *pic = sni_get_coverart(track, pixbuf_lazy_load);
         if (pic) {
@@ -188,7 +188,7 @@ sni_update_tooltip(int state) {
         return;
     if (!icon)
         return;
-    if (deadbeef->conf_get_int("sni.enable_tooltip", 0) == 0)
+    if (deadbeef->conf_get_int(SNI_OPTION_TOOLTIP_ENABLE, 0) == 0)
         return;
 
     switch (state) {
@@ -199,7 +199,7 @@ sni_update_tooltip(int state) {
     case DDB_PLAYBACK_STATE_PLAYING: {
         DB_playItem_t *track = deadbeef->streamer_get_playing_track();
         if (track) {
-            deadbeef->conf_get_int("sni.tooltip_plain_text", 0)
+            deadbeef->conf_get_int(SNI_OPTION_TOOLTIP_ISTEXT, 0)
                 ? sni_set_tooltip_textonly(track, state)
                 : sni_set_tooltip_html(track, state);
 
@@ -219,7 +219,7 @@ sni_update_status(int state) {
         return;
     if (!icon)
         return;
-    int enable_overlay = deadbeef->conf_get_int("sni.enable_overlay", 1);
+    int enable_overlay = deadbeef->conf_get_int(SNI_OPTION_ICON_OVERLAY, 1);
 
     switch (state) {
     case DDB_PLAYBACK_STATE_PLAYING:

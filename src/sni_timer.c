@@ -69,6 +69,7 @@ callback_timer_status_update(gpointer ctx) {
 
     sni_update_info(sni_ctx, state);
 
+    update_window_controls();
     return TRUE;
 }
 

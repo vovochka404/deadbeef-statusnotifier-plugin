@@ -66,10 +66,7 @@ typedef enum {
     SNI_MENU_ITEM_TYPE_SEPARATOR
 } SNIContextMenuItemType;
 
-typedef enum {
-    SNI_FLAG_ENABLED = 1 << 0,
-    SNI_FLAG_LOADED = 1 << 1,
-} SNIFlags;
+typedef enum { SNI_FLAG_ENABLED = 0, SNI_FLAG_LOADED = 1, SNI_FLAG_HIDDEN = 2 } SNIFlags;
 
 enum {
     SNI_STATE_TOOGLE_PLAY = 0,
@@ -77,11 +74,33 @@ enum {
     SNI_STATE_TOOGLE_STOP = 2,
 };
 
+#define SNI_OPTION_ENABLE "sni.enabled"
+#define SNI_OPTION_ICON_MINIMIZE "sni.icon_minimize_action"
+#define SNI_OPTION_ICON_OVERLAY "sni.icon_overlay"
+#define SNI_OPTION_ICON_REPLACE "sni.icon_replace"
+#define SNI_OPTION_TOOLTIP_ENABLE "sni.tooltip_enable"
+#define SNI_OPTION_TOOLTIP_ISTEXT "sni.tooltip_istext"
+#define SNI_OPTION_TOOLTIP_ICON "sni.tooltip_icon"
+#define SNI_OPTION_MENU_PLAYBACK "sni.menu_playback"
+#define SNI_OPTION_MENU_TOGGLE "sni.menu_wmtoggle"
+#define SNI_OPTION_VOLUME_HORIZONTAL "sni.volume_hdirect"
+#define SNI_OPTION_VOLUME_INVERSE "sni.volume_inverse"
+#define SNI_OPTION_TIMEOUT "sni.timeout"
+
 DbusmenuMenuitem *
 get_context_menu(void);
 
 DbusmenuMenuitem *
 get_context_menu_item(SNIContextMenuItem item);
+
+gboolean
+deadbeef_window_is_visible(void);
+
+void
+deadbeef_toogle_window(void);
+
+void
+update_window_controls(void);
 
 void
 update_playback_controls(void);
@@ -106,6 +125,15 @@ sni_context_menu_create(void);
 
 void
 sni_context_menu_release(void);
+
+gboolean
+sni_flag_get(uint32_t code);
+
+void
+sni_flag_set(uint32_t code);
+
+void
+sni_flag_unset(uint32_t code);
 
 #define sni_free_null(X)                                                                           \
     do {                                                                                           \
