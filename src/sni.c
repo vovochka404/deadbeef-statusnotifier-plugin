@@ -33,6 +33,12 @@ static DB_functions_t *deadbeef = NULL;
 static ddb_gtkui_t *gtkui_plugin;
 static DB_misc_t plugin;
 
+#if GTK_CHECK_VERSION(3,0,0)
+#  define SNI_GTKUIVERSION "3"
+#else
+#  define SNI_GTKUIVERSION "2"
+#endif
+
 DB_functions_t *
 deadbeef_get_instance(void) {
     return deadbeef;
@@ -315,8 +321,8 @@ static int
 sni_connect() {
     gtkui_plugin = (ddb_gtkui_t *)deadbeef->plug_get_for_id(DDB_GTKUI_PLUGIN_ID);
     if (!gtkui_plugin) {
-        deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_DEFAULT,
-                               "sni: can't find gtkui plugin\n");
+        deadbeef->log_detailed((DB_plugin_t *)(&plugin), DDB_LOG_LAYER_INFO,
+                               "sni: can't find GTK"SNI_GTKUIVERSION" plugin\n");
         return -1;
     }
 
