@@ -18,7 +18,6 @@ If you know how to fix certain bugs, patches are welcome.
 * GNOME don't support notifiction tooltips (at least for the Ubuntu Appindicator extension)
 * GNOME SNI overlay icons work incorrect (update after refresh icon area)
 * Cinnamon don't support SNI overlay icons
-* In the new version of KDE Plasma (> = 5.19, Ubuntu 20.10), tooltip icons are not displayed. This is tested on KDE Plasma 5.5 (Ubuntu 16.04) and works correctly.
 
 ### Required packages
 * `cmake`(optional)

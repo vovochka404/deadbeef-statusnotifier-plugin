@@ -55,13 +55,13 @@ static const gchar item_xml[] =
     "       <property name='Status' type='s' access='read' />"
     "       <property name='WindowId' type='i' access='read' />"
     "       <property name='IconName' type='s' access='read' />"
-    "       <property name='IconPixmap' type='(iiay)' access='read' />"
+    "       <property name='IconPixmap' type='a(iiay)' access='read' />"
     "       <property name='OverlayIconName' type='s' access='read' />"
-    "       <property name='OverlayIconPixmap' type='(iiay)' access='read' />"
+    "       <property name='OverlayIconPixmap' type='a(iiay)' access='read' />"
     "       <property name='AttentionIconName' type='s' access='read' />"
-    "       <property name='AttentionIconPixmap' type='(iiay)' access='read' />"
+    "       <property name='AttentionIconPixmap' type='a(iiay)' access='read' />"
     "       <property name='AttentionMovieName' type='s' access='read' />"
-    "       <property name='ToolTip' type='(s(iiay)ss)' access='read' />"
+    "       <property name='ToolTip' type='(sa(iiay)ss)' access='read' />"
 #ifdef USE_DBUSMENU
     "       <property name='Menu' type='o' access='read' />"
 #endif
