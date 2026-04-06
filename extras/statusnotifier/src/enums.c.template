@@ -14,8 +14,12 @@
 GType
 @enum_name@_get_type (void)
 {
+#if GLIB_CHECK_VERSION(2, 68, 0)
+  static gsize g_define_type_id__volatile = 0;
+#else
   static volatile gsize g_define_type_id__volatile = 0;
- 
+#endif
+
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const G@Type@Value values[] = {
 /*** END value-header ***/
