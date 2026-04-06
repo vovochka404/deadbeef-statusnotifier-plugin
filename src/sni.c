@@ -51,6 +51,10 @@ deadbeef_toggle_play_pause(void);
 #include "sni_upd.c"
 #include "sni_timer.c"
 #include "x11-force-focus.c"
+#if GTK_CHECK_VERSION(3, 0, 0) && defined(HAVE_WAYLAND_ACTIVATION)
+#include <gdk/gdkwayland.h>
+#include "wayland-activate.h"
+#endif
 
 gboolean
 deadbeef_window_is_visible(void) {
@@ -66,28 +70,48 @@ void
 deadbeef_toogle_window(void) {
     GtkWidget *mainwin = gtkui_plugin->get_mainwin();
     GdkWindow *gdk_window = gtk_widget_get_window(mainwin);
+    gboolean was_visible;
+    int iconified;
 
     if (toggle_mainwindow_action) {
         toggle_mainwindow_action->callback2(toggle_mainwindow_action, -1);
-    } else {
-        int iconified = gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_ICONIFIED;
-        if (gtk_widget_get_visible(mainwin) && !iconified) {
-            gtk_widget_hide(mainwin);
-        } else {
-            (iconified) ? gtk_window_deiconify(GTK_WINDOW(mainwin))
-                        : gtk_window_present(GTK_WINDOW(mainwin));
-        }
-        gtk_window_move(GTK_WINDOW(mainwin), deadbeef->conf_get_int("mainwin.geometry.x", 0),
-                        deadbeef->conf_get_int("mainwin.geometry.y", 0));
+        return;
     }
 
-    if (gtk_widget_get_visible(mainwin)) {
-#if defined(GDK_WINDOWING_WAYLAND)
-        GdkDisplay *display = gdk_display_get_default();
-        if (GDK_IS_X11_DISPLAY(display))
-#endif
-            gdk_x11_window_force_focus(gdk_window, 0);
+    was_visible = gtk_widget_get_visible(mainwin);
+    iconified = gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_ICONIFIED;
+
+    if (was_visible && !iconified) {
+        gtk_widget_hide(mainwin);
+        return;
     }
+
+    /* Window was hidden or iconified - show it */
+    if (iconified)
+        gtk_window_deiconify(GTK_WINDOW(mainwin));
+    else
+        gtk_window_present(GTK_WINDOW(mainwin));
+
+    gtk_window_move(GTK_WINDOW(mainwin),
+                    deadbeef->conf_get_int("mainwin.geometry.x", 0),
+                    deadbeef->conf_get_int("mainwin.geometry.y", 0));
+
+    /* Request focus only when restoring from hidden/iconified state */
+#if defined(GDK_WINDOWING_WAYLAND)
+    {
+        GdkDisplay *display = gdk_display_get_default();
+        #if GTK_CHECK_VERSION(3, 0, 0) && defined(HAVE_WAYLAND_ACTIVATION)
+        if (GDK_IS_WAYLAND_DISPLAY(display)) {
+            gdk_wayland_window_activate(gdk_window, 0);
+        } else
+        #endif
+        if (GDK_IS_X11_DISPLAY(display)) {
+            gdk_x11_window_force_focus(gdk_window, 0);
+        }
+    }
+#else
+    gdk_x11_window_force_focus(gdk_window, 0);
+#endif
 }
 
 static void
@@ -365,13 +389,13 @@ static const char settings_dlg[] =
     "property \"Display Status Notifier tooltip (if DE support this)\" checkbox "SNI_OPTION_TOOLTIP_ENABLE" 1;\n"
     "property \"Use plain text tooltip (if DE not support HTML tooltips)\" checkbox "SNI_OPTION_TOOLTIP_ISTEXT" 0;\n"
     "property \"Set tooltip icon (if DE support this)\" checkbox "SNI_OPTION_TOOLTIP_ICON" 1;\n"
-    
+
     "property \"Enable playback options in menu (need restart)\" checkbox "SNI_OPTION_MENU_PLAYBACK" 1;\n"
     "property \"Enable window mode options in menu (need restart)\" checkbox "SNI_OPTION_MENU_TOGGLE" 1;\n"
 
     "property \"Volume control ignore horizontal scroll\" checkbox "SNI_OPTION_VOLUME_HORIZONTAL" 1;\n"
     "property \"Volume control use inverse scroll direction\" checkbox "SNI_OPTION_VOLUME_INVERSE" 0;\n"
-    
+
     "property \"Notifier registration waiting time (sec.)\" spinbtn[10,120,5] "SNI_OPTION_TIMEOUT" 30;\n"
 ;
 // clang-format on
